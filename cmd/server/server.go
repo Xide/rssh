@@ -1,8 +1,8 @@
 package server
 
 import (
-	"github.com/spf13/cobra"
 	"github.com/Xide/rssh/pkg/server"
+	"github.com/spf13/cobra"
 )
 
 type apiFlags struct {

@@ -1,11 +1,11 @@
 package api
 
 import (
-	"fmt"
 	"context"
-	"crypto/x509"
 	"crypto/rand"
 	"crypto/rsa"
+	"crypto/x509"
+	"fmt"
 	// "crypto/sha512"
 	"encoding/hex"
 	"github.com/rs/zerolog/log"
@@ -14,7 +14,7 @@ import (
 
 type AgentCredentials struct {
 	Identity string
-	Secret *string
+	Secret   *string
 }
 
 func GenerateAgentCredentials(domain string) (*AgentCredentials, error) {
@@ -49,10 +49,10 @@ func GenerateAgentCredentials(domain string) (*AgentCredentials, error) {
 	// 	return nil, err
 	// }
 	// ChallengeHex := hex.EncodeToString(Challenge)
-		
-	credentials := &AgentCredentials {
+
+	credentials := &AgentCredentials{
 		Identity: publicKeyHex,
-		Secret: &privateKeyHex,
+		Secret:   &privateKeyHex,
 	}
 	log.Debug().
 		Str("domain", domain).
@@ -60,7 +60,6 @@ func GenerateAgentCredentials(domain string) (*AgentCredentials, error) {
 		Msg("Generated account credentials.")
 	return credentials, nil
 }
-
 
 func PersistAgentCredentials(etcd client.KeysAPI, creds AgentCredentials, domain string) error {
 	_, err := etcd.Set(context.Background(), fmt.Sprintf("/agents/%s/%s", domain, creds.Identity), "{}", nil)

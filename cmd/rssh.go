@@ -1,33 +1,39 @@
 package rssh
 
 import (
-	"os"
-	"time"
-    "github.com/rs/zerolog"
-    "github.com/rs/zerolog/log"
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"golang.org/x/crypto/ssh/terminal"
+	"os"
+	"time"
 
-	"github.com/Xide/rssh/cmd/version"
-	"github.com/Xide/rssh/cmd/server"
 	"github.com/Xide/rssh/cmd/expose"
+	"github.com/Xide/rssh/cmd/server"
+	"github.com/Xide/rssh/cmd/version"
 )
 
 const defaultLevel = zerolog.InfoLevel
 
 type Flags struct {
-	LogLevel string
+	LogLevel   string
 	ConfigFile string
 }
 
 func parseLogLevel(strLevel string) zerolog.Level {
 	switch strLevel {
-	case "debug": return zerolog.DebugLevel
-	case "info": return zerolog.InfoLevel
-	case "warn": return zerolog.WarnLevel
-	case "error": return zerolog.ErrorLevel
-	case "fatal": return zerolog.FatalLevel
-	case "panic": return zerolog.PanicLevel
+	case "debug":
+		return zerolog.DebugLevel
+	case "info":
+		return zerolog.InfoLevel
+	case "warn":
+		return zerolog.WarnLevel
+	case "error":
+		return zerolog.ErrorLevel
+	case "fatal":
+		return zerolog.FatalLevel
+	case "panic":
+		return zerolog.PanicLevel
 	default:
 		log.Warn().Msg("Invalid log level specified. Ignoring.")
 		return defaultLevel
@@ -40,7 +46,6 @@ func setupLogLevel(flags *Flags, cmd *cobra.Command, args []string) error {
 	log.Debug().Str("loglevel", flags.LogLevel).Msg("Initialized logging.")
 	return nil
 }
-
 
 func NewCommand() *cobra.Command {
 	flags := &Flags{}
@@ -73,9 +78,9 @@ func NewCommand() *cobra.Command {
 
 func Execute() {
 	log.Logger = log.Output(zerolog.ConsoleWriter{
-		Out: os.Stdout, 
+		Out:        os.Stdout,
 		TimeFormat: time.RFC3339,
-		NoColor: !terminal.IsTerminal(int(os.Stdout.Fd())),
+		NoColor:    !terminal.IsTerminal(int(os.Stdout.Fd())),
 	})
 
 	if err := NewCommand().Execute(); err != nil {
