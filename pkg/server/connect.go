@@ -10,9 +10,9 @@ type ConnectRequest struct {
 	Host string
 }
 
-type ConnectResponse struct {}
+type ConnectResponse struct{}
 
-func (api *APIDispatcher) ConnectHandler() (func(ctx *fasthttp.RequestCtx)){
+func (api *APIDispatcher) ConnectHandler() func(ctx *fasthttp.RequestCtx) {
 	return func(ctx *fasthttp.RequestCtx) {
 		log.Debug().
 			Str("Host", string(ctx.Host())).

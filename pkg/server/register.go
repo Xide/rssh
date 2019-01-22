@@ -1,14 +1,14 @@
 package api
 
 import (
-	"fmt"
-	"regexp"
-	"errors"
 	"context"
 	"encoding/json"
+	"errors"
+	"fmt"
 	"github.com/rs/zerolog/log"
 	"github.com/valyala/fasthttp"
 	"go.etcd.io/etcd/client"
+	"regexp"
 )
 
 type RegisterRequest struct {
@@ -16,13 +16,13 @@ type RegisterRequest struct {
 }
 
 type registerError struct {
-	Msg string `json:"msg"`
-	Code int  `json:"code"`
+	Msg  string `json:"msg"`
+	Code int    `json:"code"`
 }
 
 type RegisterResponse struct {
 	AgentID *string `json:"agentID"`
-	Err *string     `json:"error"`
+	Err     *string `json:"error"`
 }
 
 func respond(ctx *fasthttp.RequestCtx, v interface{}) error {
@@ -50,8 +50,8 @@ func respond(ctx *fasthttp.RequestCtx, v interface{}) error {
 
 func failRequest(ctx *fasthttp.RequestCtx, msg string, code int) {
 	ctx.SetStatusCode(code)
-	resp := registerError {
-		Msg: msg,
+	resp := registerError{
+		Msg:  msg,
 		Code: code,
 	}
 	respond(ctx, resp)
@@ -71,7 +71,7 @@ func getDomain(ctx *fasthttp.RequestCtx) string {
 func (api *APIExecutor) HandleAgentRegistration(ctx *fasthttp.RequestCtx) *RegisterResponse {
 	domain := getDomain(ctx)
 	log.Info().Str("domain", domain).Msg("Creating new agent.")
-	_, err := api.etcd.Get(context.Background(), "/agents/" + domain, nil)
+	_, err := api.etcd.Get(context.Background(), "/agents/"+domain, nil)
 	if err != nil {
 		if err.(client.Error).Code == client.ErrorCodeKeyNotFound {
 			log.Debug().Str("domain", domain).Msg("Domain is free.")
@@ -85,7 +85,7 @@ func (api *APIExecutor) HandleAgentRegistration(ctx *fasthttp.RequestCtx) *Regis
 				PersistAgentCredentials(api.etcd, *creds, domain)
 				return &RegisterResponse{
 					AgentID: creds.Secret,
-					Err: nil,
+					Err:     nil,
 				}
 			}
 		} else {
@@ -102,7 +102,7 @@ func (api *APIExecutor) HandleAgentRegistration(ctx *fasthttp.RequestCtx) *Regis
 		failRequest(ctx, "domain already registered.", 403)
 	}
 	return nil
-} 
+}
 
 func (api *APIDispatcher) RegisterHandler(ctx *fasthttp.RequestCtx) {
 	reqDomain := ctx.UserValue("domain").(string)
@@ -124,5 +124,5 @@ func (api *APIDispatcher) RegisterHandler(ctx *fasthttp.RequestCtx) {
 	log.Info().
 		Str("Domain", reqDomain).
 		Msg("New agent registered.")
-	
+
 }

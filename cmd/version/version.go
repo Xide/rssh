@@ -1,9 +1,8 @@
 package version
 
 import (
-	"github.com/spf13/cobra"
 	"github.com/rs/zerolog/log"
-
+	"github.com/spf13/cobra"
 )
 
 const Version = "0.0.1"

@@ -1,15 +1,15 @@
 package api
 
 import (
-	"fmt"
-	"errors"
 	"encoding/json"
+	"errors"
+	"fmt"
 	"github.com/rs/zerolog/log"
 	"github.com/valyala/fasthttp"
 )
 
 type AuthRequest struct {
-	Domain string
+	Domain  string
 	AgentID string
 }
 
@@ -49,7 +49,7 @@ func (api *APIDispatcher) AuthHandler(ctx *fasthttp.RequestCtx) {
 		Str("token", string(token)).
 		Msg("Auth request parsed")
 
-	resp := AuthResponse { Slot: nil }
+	resp := AuthResponse{Slot: nil}
 	b, err := json.Marshal(resp)
 	if err != nil {
 		log.Error().Str("token", string(token)).Msg("Failed to marshal response: " + err.Error())

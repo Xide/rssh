@@ -1,17 +1,16 @@
 package api
 
 import (
-	"fmt"
-	"time"
-	"errors"
 	"context"
+	"errors"
+	"fmt"
 	"go.etcd.io/etcd/client"
+	"time"
 
-	"github.com/rs/zerolog/log"
 	"github.com/buaazp/fasthttprouter"
+	"github.com/rs/zerolog/log"
 	"github.com/valyala/fasthttp"
 )
-
 
 type Endpoint struct {
 	Host string
@@ -56,7 +55,7 @@ func NewExecutor(etcdEndpoints []string) (*APIExecutor, error) {
 	}
 
 	log.Info().Msg("etcd connection established.")
-	return &APIExecutor {
+	return &APIExecutor{
 		kapi,
 	}, nil
 }
