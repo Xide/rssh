@@ -65,7 +65,6 @@ func NewDispatcher(bindAddr string, bindPort uint16) (*APIDispatcher, error) {
 		bindAddr,
 		bindPort,
 		nil,
-		make(chan ConnectRequest, 2048),
 	}, nil
 }
 
