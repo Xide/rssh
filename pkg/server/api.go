@@ -2,8 +2,8 @@ package api
 
 import (
 	"fmt"
-	// "regexp"
 	"time"
+	"errors"
 	"context"
 	"go.etcd.io/etcd/client"
 
@@ -11,7 +11,6 @@ import (
 	"github.com/buaazp/fasthttprouter"
 	"github.com/valyala/fasthttp"
 )
-
 
 
 type Endpoint struct {
@@ -27,11 +26,7 @@ type APIDispatcher struct {
 	bindAddr string
 	bindPort uint16
 
-	// Agent requests
-	RegisterCH chan RegisterRpc
-
-	// Client requests
-	ConnectCH chan ConnectRequest
+	executor *APIExecutor
 }
 
 func NewExecutor(etcdEndpoints []string) (*APIExecutor, error) {
@@ -66,24 +61,24 @@ func NewExecutor(etcdEndpoints []string) (*APIExecutor, error) {
 	}, nil
 }
 
-func (e *APIExecutor) Bind(d *APIDispatcher) {
-	go e.HandleAgentRegistration(d.RegisterCH)
-}
-
 func NewDispatcher(bindAddr string, bindPort uint16) (*APIDispatcher, error) {
 	return &APIDispatcher{
 		bindAddr,
 		bindPort,
-		make(chan RegisterRpc, 512),
+		nil,
 		make(chan ConnectRequest, 2048),
 	}, nil
 }
 
-func (api *APIDispatcher) Run() error {
+func (api *APIDispatcher) Run(executor *APIExecutor) error {
+	if executor == nil {
+		return errors.New("Running dispatcher without executor")
+	}
+	api.executor = executor
 	router := fasthttprouter.New()
 
 	router.POST("/auth", api.AuthHandler)
-	router.POST("/register/:domain", api.RegisterHandler())
+	router.POST("/register/:domain", api.RegisterHandler)
 	router.GET("/connect", api.ConnectHandler())
 	log.Debug().Msg("Registered handlers")
 

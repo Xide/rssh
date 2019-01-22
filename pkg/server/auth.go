@@ -9,6 +9,7 @@ import (
 )
 
 type AuthRequest struct {
+	Domain string
 	AgentID string
 }
 
@@ -23,6 +24,15 @@ func (r *AuthRequest) Validate() error {
 	return nil
 }
 
+// func getIdentity(ctx *fasthttp.RequestCtx) (req *AuthRequest, err error) {
+// 	return &AuthRequest{
+// 		AgentID: ctx.UserValue("identity").(string)
+// 	}
+// }
+
+// func (api *APIExecutor) ValidateIdentity(ctx *fasthttp.RequestCtx) {
+
+// }
 
 func (api *APIDispatcher) AuthHandler(ctx *fasthttp.RequestCtx) {
 	log.Debug().Msg("Received new auth request.")
