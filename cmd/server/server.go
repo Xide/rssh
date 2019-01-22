@@ -29,8 +29,7 @@ func NewCommand() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			executor.Bind(httpAPI)
-			return httpAPI.Run()
+			return httpAPI.Run(executor)
 		},
 	}
 
