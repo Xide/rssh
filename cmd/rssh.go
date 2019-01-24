@@ -42,7 +42,7 @@ func parseLogLevel(strLevel string) zerolog.Level {
 	}
 }
 
-func setupLogLevel(flags *Flags, cmd *cobra.Command, args []string) error {
+func setupLogLevel(flags *Flags) error {
 	ll := parseLogLevel(flags.LogLevel)
 	zerolog.SetGlobalLevel(ll)
 	log.Debug().Str("loglevel", flags.LogLevel).Msg("Initialized logging.")
@@ -51,13 +51,13 @@ func setupLogLevel(flags *Flags, cmd *cobra.Command, args []string) error {
 
 func NewCommand() *cobra.Command {
 	flags := &Flags{}
+	cobra.OnInitialize(func() {
+		setupLogLevel(flags)
+	})
 	cmd := &cobra.Command{
 		Use:   "rssh",
 		Short: "rssh is a tool for managing reverse shells exposed on a public endpoint.",
 		Long:  "rssh is a tool for managing reverse shells exposed on a public endpoint.",
-		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
-			return setupLogLevel(flags, cmd, args)
-		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return cmd.Help()
 		},
