@@ -4,8 +4,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"go.etcd.io/etcd/client"
 	"time"
+
+	"go.etcd.io/etcd/client"
 
 	"github.com/buaazp/fasthttprouter"
 	"github.com/rs/zerolog/log"
@@ -37,6 +38,7 @@ func NewExecutor(etcdEndpoints []string) (*APIExecutor, error) {
 	c, err := client.New(cfg)
 	if err != nil {
 		l := log.Fatal()
+		l.Str("error", err.Error())
 		for i, e := range etcdEndpoints {
 			l.Str(fmt.Sprintf("endpoint-%d", i), e)
 		}
@@ -48,6 +50,7 @@ func NewExecutor(etcdEndpoints []string) (*APIExecutor, error) {
 	_, err = c.GetVersion(context.Background())
 	if err != nil {
 		l := log.Fatal()
+		l.Str("error", err.Error())
 		for i, e := range etcdEndpoints {
 			l.Str(fmt.Sprintf("endpoint-%d", i), e)
 		}
