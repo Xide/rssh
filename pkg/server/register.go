@@ -5,10 +5,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"regexp"
+
 	"github.com/rs/zerolog/log"
 	"github.com/valyala/fasthttp"
 	"go.etcd.io/etcd/client"
-	"regexp"
 )
 
 type RegisterRequest struct {

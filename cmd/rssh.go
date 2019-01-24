@@ -1,12 +1,14 @@
 package rssh
 
 import (
+	"os"
+	"time"
+
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 	"golang.org/x/crypto/ssh/terminal"
-	"os"
-	"time"
 
 	"github.com/Xide/rssh/cmd/expose"
 	"github.com/Xide/rssh/cmd/server"
@@ -82,6 +84,7 @@ func Execute() {
 		TimeFormat: time.RFC3339,
 		NoColor:    !terminal.IsTerminal(int(os.Stdout.Fd())),
 	})
+	viper.AutomaticEnv()
 
 	if err := NewCommand().Execute(); err != nil {
 		os.Stderr.WriteString(err.Error() + "\n")

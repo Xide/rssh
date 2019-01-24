@@ -1,17 +1,59 @@
 package server
 
 import (
-	"github.com/Xide/rssh/pkg/server"
+	"fmt"
+	"strconv"
+
+	"github.com/rs/zerolog/log"
+
+	api "github.com/Xide/rssh/pkg/server"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 type apiFlags struct {
-	BindAddr string
-	BindPort uint16
+	BindAddr      string
+	BindPort      uint16
+	EtcdEndpoints []string
+}
+
+func parseArgs(flags *apiFlags) func() {
+	return func() {
+		flags.BindAddr = viper.Get("addr").(string)
+		port, err := strconv.ParseUint(viper.Get("port").(string), 10, 16)
+		if err != nil {
+			log.Fatal().
+				Str("port", viper.Get("addr").(string)).
+				Msg(fmt.Sprintf("Could not parse %s as an integer.", viper.Get("addr").(string)))
+		}
+		flags.BindPort = uint16(port)
+	}
+}
+
+func initConfig() {
+	if cfgFile != "" {
+		// Use config file from the flag.
+		viper.SetConfigFile(cfgFile)
+	} else {
+		// Find home directory.
+		home, err := homedir.Dir()
+		if err != nil {
+			log.Fatal().Str("error", err.Error()).Msg("Could not find user home directory")
+		}
+		viper.AddConfigPath(home)
+		viper.SetConfigName(".")
+	}
+	viper.AutomaticEnv() // read in environment variables that match
+	// If a config file is found, read it in.
+	if err := viper.ReadInConfig(); err == nil {
+		fmt.Println("Using config file:", viper.ConfigFileUsed())
+	}
 }
 
 func NewCommand() *cobra.Command {
 	flags := &apiFlags{}
+
+	cobra.OnInitialize(parseArgs(flags))
 	cmd := &cobra.Command{
 		Use:   "server",
 		Short: "Run the RSSH public server.",
@@ -49,5 +91,6 @@ func NewCommand() *cobra.Command {
 		"HTTP API port",
 	)
 
+	viper.BindPFlags(cmd.PersistentFlags())
 	return cmd
 }
