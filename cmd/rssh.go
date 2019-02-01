@@ -2,7 +2,10 @@ package rssh
 
 import (
 	"os"
+	"strings"
 	"time"
+
+	"github.com/Xide/rssh/pkg/utils"
 
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -18,8 +21,9 @@ import (
 const defaultLevel = zerolog.InfoLevel
 
 type Flags struct {
-	LogLevel   string
+	LogLevel   string `mapstructure:"log_level"`
 	ConfigFile string
+	APIFlags   server.APIFlags `mapstructure:"api"`
 }
 
 func parseLogLevel(strLevel string) zerolog.Level {
@@ -43,15 +47,16 @@ func parseLogLevel(strLevel string) zerolog.Level {
 }
 
 func setupLogLevel(flags *Flags) error {
-	ll := parseLogLevel(flags.LogLevel)
+	raw := viper.GetString("log_level")
+	ll := parseLogLevel(raw)
 	zerolog.SetGlobalLevel(ll)
-	log.Debug().Str("loglevel", flags.LogLevel).Msg("Initialized logging.")
+	log.Debug().Str("loglevel", raw).Msg("Initialized logging.")
 	return nil
 }
 
-func NewCommand() *cobra.Command {
-	flags := &Flags{}
+func NewCommand(flags *Flags) *cobra.Command {
 	cobra.OnInitialize(func() {
+		utils.InitConfig(flags)
 		setupLogLevel(flags)
 	})
 	cmd := &cobra.Command{
@@ -72,8 +77,8 @@ func NewCommand() *cobra.Command {
 	)
 
 	cmd.AddCommand(version.NewCommand())
-	cmd.AddCommand(server.NewCommand())
 	cmd.AddCommand(expose.NewCommand())
+	cmd.AddCommand(server.NewCommand(&flags.APIFlags))
 
 	return cmd
 }
@@ -84,10 +89,13 @@ func Execute() {
 		TimeFormat: time.RFC3339,
 		NoColor:    !terminal.IsTerminal(int(os.Stdout.Fd())),
 	})
+	configToEnv := strings.NewReplacer(".", "_")
+	viper.SetEnvKeyReplacer(configToEnv)
 	viper.SetEnvPrefix("rssh")
 	viper.AutomaticEnv()
+	flags := &Flags{}
 
-	if err := NewCommand().Execute(); err != nil {
+	if err := NewCommand(flags).Execute(); err != nil {
 		os.Stderr.WriteString(err.Error() + "\n")
 		os.Exit(1)
 	}
