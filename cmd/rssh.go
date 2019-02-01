@@ -91,6 +91,7 @@ func Execute() {
 	})
 	configToEnv := strings.NewReplacer(".", "_")
 	viper.SetEnvKeyReplacer(configToEnv)
+	viper.SetEnvPrefix("rssh")
 	viper.AutomaticEnv()
 	flags := &Flags{}
 
