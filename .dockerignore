@@ -1,0 +1,5 @@
+.git/
+docker-compose.yml
+.rssh.yml
+LICENCE
+README.md

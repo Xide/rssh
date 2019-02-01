@@ -1,8 +1,21 @@
-FROM golang:latest
+# Builder stage
+FROM golang:1.11-alpine AS builder
 
-WORKDIR /app
-ADD . /app
+RUN apk add --no-cache git
 
-RUN go build
+WORKDIR /rssh
 
-CMD ./rssh --loglevel=debug server
+COPY go.mod go.sum ./
+RUN go mod download
+
+COPY . ./
+
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
+    go build -a -o rssh ./
+
+# Release stage
+FROM scratch AS release
+
+COPY --from=builder /rssh/rssh /usr/bin/rssh
+
+ENTRYPOINT [ "/usr/bin/rssh" ]

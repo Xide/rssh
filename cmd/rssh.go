@@ -84,6 +84,7 @@ func Execute() {
 		TimeFormat: time.RFC3339,
 		NoColor:    !terminal.IsTerminal(int(os.Stdout.Fd())),
 	})
+	viper.SetEnvPrefix("rssh")
 	viper.AutomaticEnv()
 
 	if err := NewCommand().Execute(); err != nil {
