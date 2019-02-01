@@ -1,12 +1,7 @@
 package server
 
 import (
-	"fmt"
-	"os"
-	"strconv"
 	"strings"
-
-	"os/user"
 
 	"github.com/rs/zerolog/log"
 
@@ -15,11 +10,10 @@ import (
 	"github.com/spf13/viper"
 )
 
-type apiFlags struct {
-	BindAddr      string
-	BindPort      uint16
+type APIFlags struct {
+	BindAddr      string `mapstructure:"addr"`
+	BindPort      uint16 `mapstructure:"port"`
 	EtcdEndpoints []string
-	Config        string
 }
 
 // Splits {"a,b", "c"} into {"a", "b", "c"}
@@ -39,75 +33,31 @@ func splitParts(maybeParted []string) []string {
 	return r
 }
 
-func parseArgs(flags *apiFlags) func() {
-	return func() {
-
-		flags.BindAddr = viper.GetString("addr")
-		port, err := strconv.ParseUint(viper.Get("port").(string), 10, 16)
-		if err != nil {
-			log.Fatal().
-				Str("port", viper.Get("addr").(string)).
-				Msg(fmt.Sprintf("Could not parse %s as an integer.", viper.Get("addr").(string)))
-		}
-		flags.EtcdEndpoints = splitParts(viper.GetStringSlice("etcd"))
-		flags.BindPort = uint16(port)
-	}
+// Shared resources not directly available throught mapstructure
+func parseArgs(flags *APIFlags) {
+	flags.EtcdEndpoints = splitParts(viper.GetStringSlice("etcd.endpoints"))
 }
 
-func initConfig(flags *apiFlags) func() {
-	return func() {
-		cnf := viper.GetString("config")
-		if cnf != "" {
-			viper.SetConfigFile(cnf)
-		} else {
-			cwd, err := os.Getwd()
-			if err != nil {
-				log.Warn().
-					Str("error", err.Error()).
-					Msg("Ignoring current directory as config file source.")
-			} else {
-				viper.AddConfigPath(cwd)
-			}
-
-			user, err := user.Current()
-			if err != nil {
-				log.Warn().
-					Str("error", err.Error()).
-					Msg("Could not find current user informations, ignoring configuration file")
-				return
-			}
-			viper.AddConfigPath(user.HomeDir)
-			viper.SetConfigName(".rssh")
-		}
-
-		if err := viper.ReadInConfig(); err == nil {
-			log.Info().Str("file", viper.ConfigFileUsed()).Msg("Configuration file loaded")
-		} else {
-			log.Warn().Str("error", err.Error()).Msg("Could not load configuration file.")
-		}
-	}
-}
-
-func NewCommand() *cobra.Command {
-	flags := &apiFlags{}
-
-	cobra.OnInitialize(initConfig(flags))
-	cobra.OnInitialize(parseArgs(flags))
+func NewCommand(flags *APIFlags) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "server",
 		Short: "Run the RSSH public server.",
 		Long:  `Run the RSSH public server.`,
+		PreRun: func(cmd *cobra.Command, args []string) {
+			parseArgs(flags)
+		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			httpAPI, err := api.NewDispatcher(
 				flags.BindAddr,
 				flags.BindPort,
 			)
 			if err != nil {
+				log.Fatal().Str("error", err.Error()).Msg("Failed to start HTTP API dispatcher")
 				return err
 			}
-
 			executor, err := api.NewExecutor(flags.EtcdEndpoints)
 			if err != nil {
+				log.Fatal().Str("error", err.Error()).Msg("Failed to start HTTP API executor")
 				return err
 			}
 			return httpAPI.Run(executor)
@@ -121,14 +71,16 @@ func NewCommand() *cobra.Command {
 		"0.0.0.0",
 		"HTTP API bind address",
 	)
+	viper.BindPFlag("api.addr", cmd.PersistentFlags().Lookup("addr"))
 
 	cmd.PersistentFlags().Uint16VarP(
 		&flags.BindPort,
 		"port",
 		"p",
-		8080,
+		9321,
 		"HTTP API port",
 	)
+	viper.BindPFlag("api.port", cmd.PersistentFlags().Lookup("port"))
 
 	cmd.PersistentFlags().StringSliceVarP(
 		&flags.EtcdEndpoints,
@@ -137,15 +89,7 @@ func NewCommand() *cobra.Command {
 		[]string{"http://127.0.0.1:2379"},
 		"Comma separated list of the Etcd hosts to discover",
 	)
+	viper.BindPFlag("etcd.endpoints", cmd.PersistentFlags().Lookup("etcd"))
 
-	cmd.PersistentFlags().StringVarP(
-		&flags.Config,
-		"config",
-		"c",
-		"",
-		"Server configuration file to use",
-	)
-
-	viper.BindPFlags(cmd.PersistentFlags())
 	return cmd
 }
