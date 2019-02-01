@@ -1,17 +1,25 @@
+# RSSH Configuration
 
 # Log level (one of: debug,info,warn,error,fatal,panic)
-log_level: info
+log_level: "info"
 
 # HTTP API
 api:
   addr: "0.0.0.0"
   port: 9321
+  domain: "baguette.localhost"
+
+gatekeeper:
+  ## Public gatekeeper SSH proxy port
+  ssh_port: 2223
+  ## Port range used by gatekeeper to allocate agents
+  ## remote forwarding sessions.
+  ssh_port_range: "31240-65535"
 
 # ETCD cluster
 ## Used in the API
 ## It can be safely ignored for client or agent configuration.
 etcd:
-  # List of peers on which an etcd cluster can be reached
+  ## List of peers on which an etcd cluster can be reached
   endpoints:
-    - http://127.0.0.1:2379
-
+    - "http://127.0.0.1:2379"

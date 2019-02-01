@@ -1,10 +1,12 @@
 module github.com/Xide/rssh
 
 require (
+	github.com/anmitsu/go-shlex v0.0.0-20161002113705-648efa622239 // indirect
 	github.com/armon/consul-api v0.0.0-20180202201655-eb2c6b5be1b6 // indirect
 	github.com/buaazp/fasthttprouter v0.1.1
 	github.com/coreos/etcd v3.3.10+incompatible // indirect
 	github.com/coreos/go-etcd v2.0.0+incompatible // indirect
+	github.com/gliderlabs/ssh v0.1.2-0.20190107192228-bed87f398c0b
 	github.com/mitchellh/mapstructure v1.1.2 // indirect
 	github.com/rs/zerolog v1.11.0
 	github.com/spf13/cast v1.3.0 // indirect

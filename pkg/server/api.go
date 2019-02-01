@@ -1,72 +1,27 @@
 package api
 
 import (
-	"context"
 	"errors"
 	"fmt"
-	"time"
-
-	"go.etcd.io/etcd/client"
 
 	"github.com/buaazp/fasthttprouter"
 	"github.com/rs/zerolog/log"
 	"github.com/valyala/fasthttp"
 )
 
-type Endpoint struct {
-	Host string
-	Port uint16
-}
-
-type APIExecutor struct {
-	etcd client.KeysAPI
-}
-
 type APIDispatcher struct {
-	bindAddr string
-	bindPort uint16
+	bindAddr   string
+	bindPort   uint16
+	bindDomain string
 
 	executor *APIExecutor
 }
 
-func NewExecutor(etcdEndpoints []string) (*APIExecutor, error) {
-	cfg := client.Config{
-		Endpoints:               etcdEndpoints,
-		Transport:               client.DefaultTransport,
-		HeaderTimeoutPerRequest: time.Second,
-	}
-	c, err := client.New(cfg)
-	if err != nil {
-		l := log.Fatal()
-		l.Str("error", err.Error())
-		for i, e := range etcdEndpoints {
-			l.Str(fmt.Sprintf("endpoint-%d", i), e)
-		}
-		l.Msg("etcd connection failed.")
-		return nil, err
-	}
-	kapi := client.NewKeysAPI(c)
-
-	_, err = c.GetVersion(context.Background())
-	if err != nil {
-		l := log.Fatal()
-		l.Str("error", err.Error())
-		for i, e := range etcdEndpoints {
-			l.Str(fmt.Sprintf("endpoint-%d", i), e)
-		}
-		l.Msg("etcd healthcheck failed.")
-	}
-
-	log.Info().Msg("etcd connection established.")
-	return &APIExecutor{
-		kapi,
-	}, nil
-}
-
-func NewDispatcher(bindAddr string, bindPort uint16) (*APIDispatcher, error) {
+func NewDispatcher(bindAddr string, bindPort uint16, domain string) (*APIDispatcher, error) {
 	return &APIDispatcher{
 		bindAddr,
 		bindPort,
+		domain,
 		nil,
 	}, nil
 }
@@ -78,12 +33,13 @@ func (api *APIDispatcher) Run(executor *APIExecutor) error {
 	api.executor = executor
 	router := fasthttprouter.New()
 
-	router.POST("/auth", api.AuthHandler)
-	router.POST("/register/:domain", api.RegisterHandler)
+	router.POST("/auth/:domain", api.executor.ValidateAuthenticationRequest(api.AuthHandler))
+	router.POST("/register/:domain", ValidateDomainRequest(api.RegisterHandler))
 	router.GET("/connect", api.ConnectHandler())
 	log.Debug().Msg("Registered handlers")
 
 	log.Info().
+		Str("domain", api.bindDomain).
 		Str("BindAddr", api.bindAddr).
 		Uint16("BindPort", api.bindPort).
 		Msg("Starting HTTP API.")

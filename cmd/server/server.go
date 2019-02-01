@@ -1,11 +1,10 @@
 package server
 
 import (
-	"strings"
-
 	"github.com/rs/zerolog/log"
 
 	api "github.com/Xide/rssh/pkg/server"
+	"github.com/Xide/rssh/pkg/utils"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -13,36 +12,27 @@ import (
 type APIFlags struct {
 	BindAddr      string `mapstructure:"addr"`
 	BindPort      uint16 `mapstructure:"port"`
+	RootDomain    string `mapstructure:"domain"`
 	EtcdEndpoints []string
 }
 
-// Splits {"a,b", "c"} into {"a", "b", "c"}
-// Temporary fix (hopefully) because Cobra doesn't
-// handle separators if they are not followed by a whitespace.
-func splitParts(maybeParted []string) []string {
-	r := []string{}
-	for _, x := range maybeParted {
-		if strings.Contains(x, ",") {
-			for _, newKey := range strings.Split(x, ",") {
-				r = append(r, newKey)
-			}
-		} else {
-			r = append(r, x)
-		}
-	}
-	return r
-}
-
-// Shared resources not directly available throught mapstructure
 func parseArgs(flags *APIFlags) {
-	flags.EtcdEndpoints = splitParts(viper.GetStringSlice("etcd.endpoints"))
+	// Shared resource not directly available throught mapstructure
+	flags.EtcdEndpoints = utils.SplitParts(viper.GetStringSlice("etcd.endpoints"))
+
+	// Domain validation
+	if !utils.IsValidDomain(flags.RootDomain) {
+		log.Fatal().
+			Str("domain", flags.RootDomain).
+			Msg("Invalid domain name.")
+	}
 }
 
 func NewCommand(flags *APIFlags) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "server",
-		Short: "Run the RSSH public server.",
-		Long:  `Run the RSSH public server.`,
+		Short: "Run the RSSH public HTTP API.",
+		Long:  `Run the RSSH public HTTP API.`,
 		PreRun: func(cmd *cobra.Command, args []string) {
 			parseArgs(flags)
 		},
@@ -50,6 +40,7 @@ func NewCommand(flags *APIFlags) *cobra.Command {
 			httpAPI, err := api.NewDispatcher(
 				flags.BindAddr,
 				flags.BindPort,
+				flags.RootDomain,
 			)
 			if err != nil {
 				log.Fatal().Str("error", err.Error()).Msg("Failed to start HTTP API dispatcher")
@@ -72,6 +63,14 @@ func NewCommand(flags *APIFlags) *cobra.Command {
 		"HTTP API bind address",
 	)
 	viper.BindPFlag("api.addr", cmd.PersistentFlags().Lookup("addr"))
+
+	cmd.PersistentFlags().StringVarP(
+		&flags.RootDomain,
+		"domain",
+		"d",
+		"",
+		"Domain the RSSH public server will be known as.",
+	)
 
 	cmd.PersistentFlags().Uint16VarP(
 		&flags.BindPort,

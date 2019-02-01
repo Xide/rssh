@@ -3,9 +3,16 @@ package expose
 import (
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
+type exposeFlags struct {
+	Config string
+	Domain string
+}
+
 func NewCommand() *cobra.Command {
+	flags := exposeFlags{}
 	cmd := &cobra.Command{
 		Use:   "expose",
 		Short: "Expose your SSH server.",
@@ -15,5 +22,22 @@ func NewCommand() *cobra.Command {
 			return nil
 		},
 	}
+
+	cmd.PersistentFlags().StringVarP(
+		&flags.Domain,
+		"domain",
+		"d",
+		"",
+		"Subdomain on which the agent will be exposed.",
+	)
+
+	cmd.PersistentFlags().StringVarP(
+		&flags.Config,
+		"config",
+		"c",
+		"",
+		"Server configuration file to use",
+	)
+	viper.BindPFlags(cmd.PersistentFlags())
 	return cmd
 }

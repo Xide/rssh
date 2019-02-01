@@ -2,10 +2,7 @@ package api
 
 import (
 	"context"
-	"encoding/json"
-	"errors"
 	"fmt"
-	"regexp"
 
 	"github.com/rs/zerolog/log"
 	"github.com/valyala/fasthttp"
@@ -26,49 +23,6 @@ type RegisterResponse struct {
 	Err     *string `json:"error"`
 }
 
-func respond(ctx *fasthttp.RequestCtx, v interface{}) error {
-	domain := getDomain(ctx)
-	b, err := json.Marshal(v)
-	if err != nil {
-		log.Error().
-			Str("error", err.Error()).
-			Str("domain", domain).
-			Msg("Failed to marshal response")
-		ctx.SetStatusCode(500)
-		return err
-	}
-
-	if _, err := ctx.Write(b); err != nil {
-		log.Warn().
-			Str("error", err.Error()).
-			Str("domain", domain).
-			Str("response", string(b)).
-			Msg("Could not respond to client")
-		return err
-	}
-	return nil
-}
-
-func failRequest(ctx *fasthttp.RequestCtx, msg string, code int) {
-	ctx.SetStatusCode(code)
-	resp := registerError{
-		Msg:  msg,
-		Code: code,
-	}
-	respond(ctx, resp)
-}
-
-func ValidateDomain(domain string) error {
-	if match, _ := regexp.MatchString("^[a-zA-Z0-9]+$", domain); !match {
-		return errors.New("Illegal characters in requested domain.")
-	}
-	return nil
-}
-
-func getDomain(ctx *fasthttp.RequestCtx) string {
-	return ctx.UserValue("domain").(string)
-}
-
 func (api *APIExecutor) HandleAgentRegistration(ctx *fasthttp.RequestCtx) *RegisterResponse {
 	domain := getDomain(ctx)
 	log.Info().Str("domain", domain).Msg("Creating new agent.")
@@ -83,7 +37,7 @@ func (api *APIExecutor) HandleAgentRegistration(ctx *fasthttp.RequestCtx) *Regis
 					Msg(fmt.Sprintf("Failed to generate agent credentials : %s", err.Error()))
 				failRequest(ctx, "Credentials generation error.", 500)
 			} else {
-				PersistAgentCredentials(api.etcd, *creds, domain)
+				PersistAgentCredentials(api.etcd, *creds)
 				return &RegisterResponse{
 					AgentID: creds.Secret,
 					Err:     nil,
@@ -106,24 +60,16 @@ func (api *APIExecutor) HandleAgentRegistration(ctx *fasthttp.RequestCtx) *Regis
 }
 
 func (api *APIDispatcher) RegisterHandler(ctx *fasthttp.RequestCtx) {
-	reqDomain := ctx.UserValue("domain").(string)
-
-	if err := ValidateDomain(reqDomain); err != nil {
-		failRequest(ctx, "Invalid domain request.", 400)
+	err := api.executor.HandleAgentRegistration(ctx)
+	if err != nil {
 		return
 	}
-
-	resp := api.executor.HandleAgentRegistration(ctx)
-	if resp == nil {
-		return
-	}
-
+	resp := RegisterResponse{nil, nil}
 	if err := respond(ctx, resp); err != nil {
 		return
 	}
 
 	log.Info().
-		Str("Domain", reqDomain).
+		Str("Domain", getDomain(ctx)).
 		Msg("New agent registered.")
-
 }

@@ -8,6 +8,7 @@ import (
 	"fmt"
 	// "crypto/sha512"
 	"encoding/hex"
+
 	"github.com/rs/zerolog/log"
 	"go.etcd.io/etcd/client"
 )
@@ -61,8 +62,8 @@ func GenerateAgentCredentials(domain string) (*AgentCredentials, error) {
 	return credentials, nil
 }
 
-func PersistAgentCredentials(etcd client.KeysAPI, creds AgentCredentials, domain string) error {
-	_, err := etcd.Set(context.Background(), fmt.Sprintf("/agents/%s/%s", domain, creds.Identity), "{}", nil)
+func PersistAgentCredentials(etcd client.KeysAPI, creds AgentCredentials) error {
+	_, err := etcd.Set(context.Background(), fmt.Sprintf("/agents/%s", creds.Identity), "{}", nil)
 	if err != nil {
 		log.Error().Str("error", err.Error()).Msg("Could not persist agent in etcd.")
 		return err
