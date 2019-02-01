@@ -13,11 +13,12 @@ services:
       dockerfile: Dockerfile
     image: xide/rssh
     environment:
-      RSSH_ETCD: 'http://etcd:2379'
-      RSSH_ADDR: '0.0.0.0'
-      RSSH_PORT: '2222'
+      RSSH_ETCD_ENDPOINTS: 'http://etcd:2379'
+      RSSH_API_ADDR: '0.0.0.0'
+      RSSH_API_PORT: '2222'
     command: server
     depends_on:
       - etcd
     ports:
       - 2222:2222
+      - 9321:9321
