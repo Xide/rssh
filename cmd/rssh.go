@@ -13,9 +13,9 @@ import (
 	"github.com/spf13/viper"
 	"golang.org/x/crypto/ssh/terminal"
 
+	"github.com/Xide/rssh/cmd/api"
 	"github.com/Xide/rssh/cmd/expose"
 	"github.com/Xide/rssh/cmd/gatekeeper"
-	"github.com/Xide/rssh/cmd/server"
 	"github.com/Xide/rssh/cmd/version"
 )
 
@@ -24,7 +24,7 @@ const defaultLevel = zerolog.InfoLevel
 type Flags struct {
 	LogLevel        string `mapstructure:"log_level"`
 	ConfigFile      string
-	APIFlags        server.APIFlags            `mapstructure:"api"`
+	APIFlags        api.APIFlags               `mapstructure:"api"`
 	GatekeeperFlags gatekeeper.GatekeeperFlags `mapstructure:"gatekeeper"`
 }
 
@@ -80,7 +80,7 @@ func NewCommand(flags *Flags) *cobra.Command {
 
 	cmd.AddCommand(version.NewCommand())
 	cmd.AddCommand(expose.NewCommand())
-	cmd.AddCommand(server.NewCommand(&flags.APIFlags))
+	cmd.AddCommand(api.NewCommand(&flags.APIFlags))
 	cmd.AddCommand(gatekeeper.NewCommand(&flags.GatekeeperFlags))
 
 	return cmd

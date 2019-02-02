@@ -1,4 +1,4 @@
-package server
+package api
 
 import (
 	"github.com/rs/zerolog/log"
@@ -30,7 +30,7 @@ func parseArgs(flags *APIFlags) {
 
 func NewCommand(flags *APIFlags) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "server",
+		Use:   "api",
 		Short: "Run the RSSH public HTTP API.",
 		Long:  `Run the RSSH public HTTP API.`,
 		PreRun: func(cmd *cobra.Command, args []string) {
