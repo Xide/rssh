@@ -23,6 +23,7 @@ const defaultLevel = zerolog.InfoLevel
 
 type Flags struct {
 	LogLevel        string `mapstructure:"log_level"`
+	RootDomain      string `mapstructure:"domain"`
 	ConfigFile      string
 	APIFlags        api.APIFlags               `mapstructure:"api"`
 	GatekeeperFlags gatekeeper.GatekeeperFlags `mapstructure:"gatekeeper"`
@@ -73,10 +74,28 @@ func NewCommand(flags *Flags) *cobra.Command {
 
 	cmd.PersistentFlags().StringVar(
 		&flags.LogLevel,
-		"loglevel",
+		"log-level",
 		defaultLevel.String(),
 		"Log level (one of: debug,info,warn,error,fatal,panic)",
 	)
+	viper.BindPFlag("log_level", cmd.PersistentFlags().Lookup("log-level"))
+
+	cmd.PersistentFlags().StringVar(
+		&flags.LogLevel,
+		"config",
+		"",
+		"path to a custom rssh config file",
+	)
+	viper.BindPFlag("config", cmd.PersistentFlags().Lookup("config"))
+
+	cmd.PersistentFlags().StringVarP(
+		&flags.RootDomain,
+		"domain",
+		"d",
+		"",
+		"Domain the RSSH public server will be known as.",
+	)
+	viper.BindPFlag("domain", cmd.PersistentFlags().Lookup("domain"))
 
 	cmd.AddCommand(version.NewCommand())
 	cmd.AddCommand(expose.NewCommand())
