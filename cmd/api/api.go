@@ -64,14 +64,6 @@ func NewCommand(flags *APIFlags) *cobra.Command {
 	)
 	viper.BindPFlag("api.addr", cmd.PersistentFlags().Lookup("addr"))
 
-	cmd.PersistentFlags().StringVarP(
-		&flags.RootDomain,
-		"domain",
-		"d",
-		"",
-		"Domain the RSSH public server will be known as.",
-	)
-
 	cmd.PersistentFlags().Uint16VarP(
 		&flags.BindPort,
 		"port",
