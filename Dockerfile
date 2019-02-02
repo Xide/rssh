@@ -16,6 +16,8 @@ RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
 # Release stage
 FROM scratch AS release
 
-COPY --from=builder /rssh/rssh /usr/bin/rssh
+WORKDIR /bin
 
-ENTRYPOINT [ "/usr/bin/rssh" ]
+COPY --from=builder /rssh/rssh /bin/rssh
+
+ENTRYPOINT [ "/bin/rssh" ]
