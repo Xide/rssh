@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"strings"
 
+	"go.etcd.io/etcd/client"
+
 	"github.com/gliderlabs/ssh"
 	"github.com/rs/zerolog/log"
 
@@ -18,6 +20,7 @@ type Gate struct {
 
 type GateKeeper struct {
 	srv       *ssh.Server
+	etcd      *client.KeysAPI
 	frontGate Gate
 	backends  []Gate
 	clients   []AgentSlot
@@ -25,10 +28,19 @@ type GateKeeper struct {
 	highPort  uint16
 }
 
-func (g *GateKeeper) WithPortRange(low uint16, high uint16) error {
+func (g *GateKeeper) WithEtcdE(etcdEndpoints []string) error {
+	k, err := utils.GetEtcdKey(etcdEndpoints)
+	if err != nil {
+		return err
+	}
+	g.etcd = k
+	return nil
+}
+
+func (g *GateKeeper) WithPortRange(low uint16, high uint16) *GateKeeper {
 	g.lowPort = utils.Min(low, high)
 	g.highPort = utils.Max(low, high)
-	return nil
+	return g
 }
 
 func NewGateKeeper(addr string, port uint16) (*GateKeeper, error) {
@@ -67,6 +79,5 @@ func (g *GateKeeper) InitSSHServer() error {
 		Str("addr", g.frontGate.Host).
 		Uint16("port", g.frontGate.Port).
 		Msg("starting SSH server")
-	go server.ListenAndServe()
-	return nil
+	return server.ListenAndServe()
 }
