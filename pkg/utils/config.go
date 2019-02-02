@@ -26,10 +26,10 @@ func InitConfig(flags interface{}) {
 		if err != nil {
 			log.Warn().
 				Str("error", err.Error()).
-				Msg("Could not find current user informations, ignoring configuration file")
-			return
+				Msg("Could not find current user informations, ignoring user directory as config file source.")
+		} else {
+			viper.AddConfigPath(user.HomeDir)
 		}
-		viper.AddConfigPath(user.HomeDir)
 		viper.SetConfigName(".rssh")
 	}
 	if err := viper.ReadInConfig(); err == nil {
