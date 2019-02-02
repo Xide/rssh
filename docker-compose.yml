@@ -16,6 +16,7 @@ services:
       RSSH_ETCD_ENDPOINTS: 'http://etcd:2379'
       RSSH_API_ADDR: '0.0.0.0'
       RSSH_API_PORT: '2222'
+      RSSH_DOMAIN: 'baguette.localhost'
     command: server
     depends_on:
       - etcd
