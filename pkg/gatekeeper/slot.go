@@ -15,7 +15,7 @@ type AgentSlot struct {
 	Established bool   `json:"established"`
 }
 
-func (g *GateKeeper) AllocateAgentSlot(domain string) (*AgentSlot, error) {
+func (g *GateKeeper) allocateAgentSlot(domain string) (*AgentSlot, error) {
 	for x := 0; x < len(g.clients); x++ {
 		if strings.Compare(domain, g.clients[x].Domain) == 0 {
 			log.Warn().

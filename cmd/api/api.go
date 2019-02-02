@@ -1,4 +1,4 @@
-package server
+package api
 
 import (
 	"github.com/rs/zerolog/log"
@@ -30,7 +30,7 @@ func parseArgs(flags *APIFlags) {
 
 func NewCommand(flags *APIFlags) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "server",
+		Use:   "api",
 		Short: "Run the RSSH public HTTP API.",
 		Long:  `Run the RSSH public HTTP API.`,
 		PreRun: func(cmd *cobra.Command, args []string) {
@@ -63,14 +63,6 @@ func NewCommand(flags *APIFlags) *cobra.Command {
 		"HTTP API bind address",
 	)
 	viper.BindPFlag("api.addr", cmd.PersistentFlags().Lookup("addr"))
-
-	cmd.PersistentFlags().StringVarP(
-		&flags.RootDomain,
-		"domain",
-		"d",
-		"",
-		"Domain the RSSH public server will be known as.",
-	)
 
 	cmd.PersistentFlags().Uint16VarP(
 		&flags.BindPort,
