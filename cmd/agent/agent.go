@@ -1,20 +1,17 @@
-package expose
+package agent
 
 import (
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
+
+	"github.com/Xide/rssh/pkg/agent"
 )
 
-type exposeFlags struct {
-	Config string
-	Domain string
-}
+type AgentFlags agent.Agent
 
-func NewCommand() *cobra.Command {
-	flags := exposeFlags{}
+func NewCommand(flags *AgentFlags) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "expose",
+		Use:   "agent",
 		Short: "Expose your SSH server.",
 		Long:  `Expose your SSH server.`,
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -22,22 +19,5 @@ func NewCommand() *cobra.Command {
 			return nil
 		},
 	}
-
-	cmd.PersistentFlags().StringVarP(
-		&flags.Domain,
-		"domain",
-		"d",
-		"",
-		"Subdomain on which the agent will be exposed.",
-	)
-
-	cmd.PersistentFlags().StringVarP(
-		&flags.Config,
-		"config",
-		"c",
-		"",
-		"Server configuration file to use",
-	)
-	viper.BindPFlags(cmd.PersistentFlags())
 	return cmd
 }

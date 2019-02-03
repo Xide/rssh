@@ -13,8 +13,8 @@ import (
 	"github.com/spf13/viper"
 	"golang.org/x/crypto/ssh/terminal"
 
+	"github.com/Xide/rssh/cmd/agent"
 	"github.com/Xide/rssh/cmd/api"
-	"github.com/Xide/rssh/cmd/expose"
 	"github.com/Xide/rssh/cmd/gatekeeper"
 	"github.com/Xide/rssh/cmd/version"
 )
@@ -27,6 +27,7 @@ type Flags struct {
 	ConfigFile      string
 	APIFlags        api.APIFlags               `mapstructure:"api"`
 	GatekeeperFlags gatekeeper.GatekeeperFlags `mapstructure:"gatekeeper"`
+	AgentFlags      agent.AgentFlags           `mapstructure:"agent"`
 }
 
 func parseLogLevel(strLevel string) zerolog.Level {
@@ -98,7 +99,7 @@ func NewCommand(flags *Flags) *cobra.Command {
 	viper.BindPFlag("domain", cmd.PersistentFlags().Lookup("domain"))
 
 	cmd.AddCommand(version.NewCommand())
-	cmd.AddCommand(expose.NewCommand())
+	cmd.AddCommand(agent.NewCommand(&flags.AgentFlags))
 	cmd.AddCommand(api.NewCommand(&flags.APIFlags))
 	cmd.AddCommand(gatekeeper.NewCommand(&flags.GatekeeperFlags))
 
