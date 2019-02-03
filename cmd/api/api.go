@@ -3,7 +3,7 @@ package api
 import (
 	"github.com/rs/zerolog/log"
 
-	api "github.com/Xide/rssh/pkg/server"
+	"github.com/Xide/rssh/pkg/api"
 	"github.com/Xide/rssh/pkg/utils"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
