@@ -1,14 +1,17 @@
 # RSSH Configuration
 
-# Log level (one of: debug,info,warn,error,fatal,panic)
+## Log level (one of: debug,info,warn,error,fatal,panic)
 log_level: "info"
 
-# HTTP API
+## HTTP API
 api:
   addr: "0.0.0.0"
   port: 9321
   domain: "baguette.localhost"
 
+
+## Gatekeeper is the public SSH frontend contacted by
+## your clients to access the agent reverse forwarding
 gatekeeper:
   ## Public gatekeeper SSH proxy port
   ssh_port: 2223
@@ -17,9 +20,20 @@ gatekeeper:
   ssh_port_range: "31240-65535"
 
 # ETCD cluster
-## Used in the API
+## Used in the API and the gatekeeper
 ## It can be safely ignored for client or agent configuration.
 etcd:
   ## List of peers on which an etcd cluster can be reached
   endpoints:
     - "http://127.0.0.1:2379"
+
+
+# Agent configuration
+agent:
+  hosts:
+    # Each line in the hosts array describe a socket forwarded by the agent
+    # The forward destination MUST be an SSH server.
+    -
+      domain: test.baguette.localhost
+      host: 127.0.0.1
+      port: 22
