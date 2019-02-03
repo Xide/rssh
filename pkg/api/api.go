@@ -1,6 +1,8 @@
 package api
 
 import (
+	"context"
+	"encoding/json"
 	"fmt"
 
 	"github.com/Xide/rssh/pkg/utils"
@@ -10,10 +12,17 @@ import (
 	"go.etcd.io/etcd/client"
 )
 
+// APIMeta represents metadatas about the running api.
+// It will be persisted to etcd in order to configure
+// the gatekeepers.
+type APIMeta struct {
+	BindDomain string `json:"domain"`
+	BindAddr   string `json:"addr"`
+	BindPort   uint16 `json:"port"`
+}
+
 type APIDispatcher struct {
-	bindAddr   string
-	bindPort   uint16
-	bindDomain string
+	Meta APIMeta
 
 	etcdEndpoints []string
 	etcd          *client.KeysAPI
@@ -26,12 +35,31 @@ func NewDispatcher(
 	etcdEndpoints []string,
 ) (*APIDispatcher, error) {
 	return &APIDispatcher{
-		bindAddr,
-		bindPort,
-		domain,
+		APIMeta{
+			domain,
+			bindAddr,
+			bindPort,
+		},
 		etcdEndpoints,
 		nil,
 	}, nil
+}
+
+// announce write the current parameters and Metadatas to the etcd cluster.
+func (api *APIDispatcher) announce() error {
+	m, err := json.Marshal(api.Meta)
+	if err != nil {
+		return err
+	}
+
+	log.Debug().Msg("Starting to announce API to etcd")
+	_, err = (*api.etcd).Set(context.Background(), "/meta/api", string(m), nil)
+	if err != nil {
+		return err
+	}
+
+	log.Info().Msg("API registered in etcd.")
+	return nil
 }
 
 func (api *APIDispatcher) Run() error {
@@ -41,19 +69,23 @@ func (api *APIDispatcher) Run() error {
 		return err
 	}
 	api.etcd = kapi
+	err = api.announce()
+	if err != nil {
+		return err
+	}
 	router := fasthttprouter.New()
 
 	router.POST("/auth/:domain", api.AuthHandler)
 	router.POST("/register/:domain", MValidateDomain(api.RegisterHandler))
 
 	log.Info().
-		Str("domain", api.bindDomain).
-		Str("BindAddr", api.bindAddr).
-		Uint16("BindPort", api.bindPort).
+		Str("domain", api.Meta.BindDomain).
+		Str("BindAddr", api.Meta.BindAddr).
+		Uint16("BindPort", api.Meta.BindPort).
 		Msg("Starting HTTP API.")
 
 	if err := fasthttp.ListenAndServe(
-		fmt.Sprintf("%s:%d", api.bindAddr, api.bindPort),
+		fmt.Sprintf("%s:%d", api.Meta.BindAddr, api.Meta.BindPort),
 		router.Handler,
 	); err != nil {
 		log.Error().
