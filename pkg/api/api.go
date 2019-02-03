@@ -35,7 +35,6 @@ func (api *APIDispatcher) Run(executor *APIExecutor) error {
 
 	router.POST("/auth/:domain", api.executor.ValidateAuthenticationRequest(api.AuthHandler))
 	router.POST("/register/:domain", ValidateDomainRequest(api.RegisterHandler))
-	router.GET("/connect", api.ConnectHandler())
 	log.Debug().Msg("Registered handlers")
 
 	log.Info().
