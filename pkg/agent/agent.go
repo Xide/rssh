@@ -9,3 +9,7 @@ type ForwardedHost struct {
 type Agent struct {
 	Hosts []ForwardedHost `json:"hosts" mapstructure:"hosts"`
 }
+
+func (a *Agent) Run() {
+
+}
