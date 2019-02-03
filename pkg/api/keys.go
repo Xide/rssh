@@ -27,6 +27,11 @@ func GenerateAgentCredentials(domain string) (*AgentCredentials, error) {
 	if err != nil {
 		return nil, err
 	}
+	err = privateKey.Validate()
+	if err != nil {
+		return nil, err
+	}
+
 	publicKey := privateKey.PublicKey
 
 	privateKeySerialized := x509.MarshalPKCS1PrivateKey(privateKey)
