@@ -1,12 +1,13 @@
 package api
 
 import (
-	"errors"
 	"fmt"
 
+	"github.com/Xide/rssh/pkg/utils"
 	"github.com/buaazp/fasthttprouter"
 	"github.com/rs/zerolog/log"
 	"github.com/valyala/fasthttp"
+	"go.etcd.io/etcd/client"
 )
 
 type APIDispatcher struct {
@@ -14,28 +15,36 @@ type APIDispatcher struct {
 	bindPort   uint16
 	bindDomain string
 
-	executor *APIExecutor
+	etcdEndpoints []string
+	etcd          *client.KeysAPI
 }
 
-func NewDispatcher(bindAddr string, bindPort uint16, domain string) (*APIDispatcher, error) {
+func NewDispatcher(
+	bindAddr string,
+	bindPort uint16,
+	domain string,
+	etcdEndpoints []string,
+) (*APIDispatcher, error) {
 	return &APIDispatcher{
 		bindAddr,
 		bindPort,
 		domain,
+		etcdEndpoints,
 		nil,
 	}, nil
 }
 
-func (api *APIDispatcher) Run(executor *APIExecutor) error {
-	if executor == nil {
-		return errors.New("Running dispatcher without executor")
+func (api *APIDispatcher) Run() error {
+
+	kapi, err := utils.GetEtcdKey(api.etcdEndpoints)
+	if err != nil {
+		return err
 	}
-	api.executor = executor
+	api.etcd = kapi
 	router := fasthttprouter.New()
 
-	router.POST("/auth/:domain", api.executor.ValidateAuthenticationRequest(api.AuthHandler))
-	router.POST("/register/:domain", ValidateDomainRequest(api.RegisterHandler))
-	log.Debug().Msg("Registered handlers")
+	router.POST("/auth/:domain", api.AuthHandler)
+	router.POST("/register/:domain", MValidateDomain(api.RegisterHandler))
 
 	log.Info().
 		Str("domain", api.bindDomain).

@@ -41,17 +41,13 @@ func NewCommand(flags *APIFlags) *cobra.Command {
 				flags.BindAddr,
 				flags.BindPort,
 				flags.RootDomain,
+				flags.EtcdEndpoints,
 			)
 			if err != nil {
 				log.Fatal().Str("error", err.Error()).Msg("Failed to start HTTP API dispatcher")
 				return err
 			}
-			executor, err := api.NewExecutor(flags.EtcdEndpoints)
-			if err != nil {
-				log.Fatal().Str("error", err.Error()).Msg("Failed to start HTTP API executor")
-				return err
-			}
-			return httpAPI.Run(executor)
+			return httpAPI.Run()
 		},
 	}
 

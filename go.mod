@@ -9,6 +9,7 @@ require (
 	github.com/gliderlabs/ssh v0.1.2-0.20190107192228-bed87f398c0b
 	github.com/mitchellh/mapstructure v1.1.2 // indirect
 	github.com/rs/zerolog v1.11.0
+	github.com/satori/go.uuid v1.2.0
 	github.com/spf13/cast v1.3.0 // indirect
 	github.com/spf13/cobra v0.0.3
 	github.com/spf13/pflag v1.0.3 // indirect

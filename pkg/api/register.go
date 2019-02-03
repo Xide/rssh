@@ -2,7 +2,7 @@ package api
 
 import (
 	"context"
-	"fmt"
+	"encoding/json"
 
 	"github.com/rs/zerolog/log"
 	"github.com/valyala/fasthttp"
@@ -19,52 +19,83 @@ type registerError struct {
 }
 
 type RegisterResponse struct {
-	AgentID *string `json:"agentID"`
-	Err     *string `json:"error"`
+	AgentID *AgentCredentials `json:"agentID"`
+	Err     *string           `json:"error"`
 }
 
-func (api *APIExecutor) HandleAgentRegistration(ctx *fasthttp.RequestCtx) *RegisterResponse {
-	domain := getDomain(ctx)
-	log.Info().Str("domain", domain).Msg("Creating new agent.")
-	_, err := api.etcd.Get(context.Background(), "/agents/"+domain, nil)
-	if err != nil {
-		if err.(client.Error).Code == client.ErrorCodeKeyNotFound {
-			log.Debug().Str("domain", domain).Msg("Domain is free.")
-			creds, err := GenerateAgentCredentials(domain)
+func MWithNewAgentCredentials(h fasthttp.RequestHandler, etcd client.KeysAPI) fasthttp.RequestHandler {
+	return fasthttp.RequestHandler(func(ctx *fasthttp.RequestCtx) {
+		domain := getDomain(ctx)
+		creds, err := GenerateAgentCredentials(domain)
+
+		if err != nil {
+			log.Error().
+				Str("error", err.Error()).
+				Str("domain", domain).
+				Msg("Failed to generate agent credentials")
+			failRequest(ctx, "Credentials generation error.", 500)
+		} else {
+			err = PersistAgentCredentials(etcd, *creds)
 			if err != nil {
 				log.Error().
+					Str("error", err.Error()).
 					Str("domain", domain).
-					Msg(fmt.Sprintf("Failed to generate agent credentials : %s", err.Error()))
+					Msg("Could not persist agent credentials")
 				failRequest(ctx, "Credentials generation error.", 500)
 			} else {
-				PersistAgentCredentials(api.etcd, *creds)
-				return &RegisterResponse{
-					AgentID: creds.Secret,
-					Err:     nil,
-				}
+				ctx.SetUserValue("credentials", creds)
+				h(ctx)
 			}
-		} else {
-			log.Error().
-				Str("domain", domain).
-				Str("error", err.Error()).
-				Msg("Unexpected etcd error")
-			failRequest(ctx, "Backend consensus error.", 500)
 		}
-	} else {
-		log.Debug().
-			Str("domain", domain).
-			Msg("Register for an already occupied slot.")
-		failRequest(ctx, "domain already registered.", 403)
-	}
-	return nil
+	})
 }
 
-func (api *APIDispatcher) RegisterHandler(ctx *fasthttp.RequestCtx) {
-	err := api.executor.HandleAgentRegistration(ctx)
-	if err != nil {
-		return
+func MWithDomainLease(h fasthttp.RequestHandler, etcd client.KeysAPI) fasthttp.RequestHandler {
+	return fasthttp.RequestHandler(func(ctx *fasthttp.RequestCtx) {
+		domain := getDomain(ctx)
+		credentials := *ctx.UserValue("credentials").(*AgentCredentials)
+		credentials.DropSecrets()
+		options := client.SetOptions{
+			PrevExist: client.PrevNoExist,
+		}
+		m, err := json.Marshal(credentials)
+		if err != nil {
+			log.Error().
+				Str("error", err.Error()).
+				Str("agent", credentials.ID.String()).
+				Str("domain", domain).
+				Msg("Could not serialize credentials")
+			failRequest(ctx, "Domain allocation error.", 500)
+		} else {
+			_, err = etcd.Set(
+				context.Background(),
+				"/domains/"+domain,
+				string(m),
+				&options,
+			)
+			if err != nil {
+				log.Error().
+					Str("error", err.Error()).
+					Str("agent", credentials.ID.String()).
+					Str("domain", domain).
+					Msg("Could not allocate domain")
+				failRequest(ctx, "Domain allocation error.", 500)
+			} else {
+				log.Info().
+					Str("agent", credentials.ID.String()).
+					Str("domain", domain).
+					Msg("Allocated domain")
+				h(ctx)
+			}
+		}
+	})
+}
+
+func (api *APIDispatcher) registerHandlerWrapped(ctx *fasthttp.RequestCtx) {
+	resp := RegisterResponse{
+		AgentID: ctx.UserValue("credentials").(*AgentCredentials),
+		Err:     nil,
 	}
-	resp := RegisterResponse{nil, nil}
 	if err := respond(ctx, resp); err != nil {
 		return
 	}
@@ -72,4 +103,22 @@ func (api *APIDispatcher) RegisterHandler(ctx *fasthttp.RequestCtx) {
 	log.Info().
 		Str("Domain", getDomain(ctx)).
 		Msg("New agent registered.")
+}
+
+// RegisterHandler is the entrypoint for an HTTP POST request in the API
+// It uses several middlewares to validate requests, and pass the valid
+// requests down to APIDispatcher.registerHandlerWrapper
+func (api *APIDispatcher) RegisterHandler(ctx *fasthttp.RequestCtx) {
+	MValidateDomain(
+		MValidateDomainIsAvailable(
+			MWithNewAgentCredentials(
+				MWithDomainLease(
+					api.registerHandlerWrapped,
+					*api.etcd,
+				),
+				*api.etcd,
+			),
+			*api.etcd,
+		),
+	)(ctx)
 }
