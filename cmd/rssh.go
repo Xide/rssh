@@ -89,15 +89,6 @@ func NewCommand(flags *Flags) *cobra.Command {
 	)
 	viper.BindPFlag("config", cmd.PersistentFlags().Lookup("config"))
 
-	cmd.PersistentFlags().StringVarP(
-		&flags.RootDomain,
-		"domain",
-		"d",
-		"",
-		"Domain the RSSH public server will be known as.",
-	)
-	viper.BindPFlag("domain", cmd.PersistentFlags().Lookup("domain"))
-
 	cmd.AddCommand(version.NewCommand())
 	cmd.AddCommand(agent.NewCommand(&flags.AgentFlags))
 	cmd.AddCommand(api.NewCommand(&flags.APIFlags))
