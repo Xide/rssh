@@ -103,5 +103,6 @@ func (a *Agent) RegisterHost(req *RegisterRequest) error {
 
 // Run is the entrypoint for the agent
 func (a *Agent) Run() {
+	a.setupFileSystem()
 
 }

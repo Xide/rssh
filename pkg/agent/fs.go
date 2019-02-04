@@ -16,6 +16,9 @@ func ensureDirectory(path string, mode os.FileMode) error {
 			if err != nil {
 				return err
 			}
+			log.Debug().Str("directory", path).Msg("Created directory.")
+		} else {
+			return err
 		}
 	} else if !s.IsDir() {
 		return errors.New("path is not a directory")
@@ -24,7 +27,7 @@ func ensureDirectory(path string, mode os.FileMode) error {
 }
 
 func (a *Agent) ensureRSSHDirectories() error {
-	if err := ensureDirectory(a.RootDirectory, 0644); err != nil {
+	if err := ensureDirectory(a.RootDirectory, 0744); err != nil {
 		return err
 	}
 	if err := ensureDirectory(path.Join(a.RootDirectory, "identities"), 0700); err != nil {
