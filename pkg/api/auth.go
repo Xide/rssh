@@ -14,7 +14,7 @@ type AuthRequest struct {
 }
 
 type AuthResponse struct {
-	Slot *Endpoint
+	Port uint16 `json:"port"`
 }
 
 func (r *AuthRequest) Validate() error {
@@ -40,7 +40,7 @@ func (api *APIDispatcher) authHandlerWrapped(ctx *fasthttp.RequestCtx) {
 		Msg("Auth request parsed")
 
 	// Create an available slot for the agent to connect to.
-	resp := AuthResponse{Slot: nil}
+	resp := AuthResponse{Port: 0}
 
 	respond(ctx, resp)
 	log.Info().
