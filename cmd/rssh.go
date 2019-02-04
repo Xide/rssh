@@ -73,21 +73,22 @@ func NewCommand(flags *Flags) *cobra.Command {
 		Version: "0.0.1",
 	}
 
-	cmd.Flags().StringVar(
+	cmd.PersistentFlags().StringVarP(
 		&flags.LogLevel,
 		"log-level",
+		"l",
 		defaultLevel.String(),
 		"Log level (one of: debug,info,warn,error,fatal,panic)",
 	)
-	viper.BindPFlag("log_level", cmd.Flags().Lookup("log-level"))
+	viper.BindPFlag("log_level", cmd.PersistentFlags().Lookup("log-level"))
 
-	cmd.Flags().StringVar(
-		&flags.LogLevel,
+	cmd.PersistentFlags().StringVar(
+		&flags.ConfigFile,
 		"config",
 		"",
 		"path to a custom rssh config file",
 	)
-	viper.BindPFlag("config", cmd.Flags().Lookup("config"))
+	viper.BindPFlag("config", cmd.PersistentFlags().Lookup("config"))
 
 	cmd.AddCommand(version.NewCommand())
 	cmd.AddCommand(agent.NewCommand(&flags.AgentFlags))
