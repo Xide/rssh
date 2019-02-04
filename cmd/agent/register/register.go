@@ -18,6 +18,8 @@ type Flags struct {
 	Host string
 	// Port to expose
 	Port uint16
+	// Port on which the API listen to requests on the root domain
+	APIPort uint16
 }
 
 func parseArgsE(flags *Flags) error {
@@ -81,6 +83,14 @@ func NewCommand() *cobra.Command {
 		"Port to expose throught agent",
 	)
 	viper.BindPFlag("register.port", cmd.Flags().Lookup("port"))
+
+	cmd.Flags().Uint16Var(
+		&flags.APIPort,
+		"api-port",
+		22,
+		"Port on which the HTTP API will listen on the root domain",
+	)
+	viper.BindPFlag("api.port", cmd.Flags().Lookup("api-port"))
 
 	return cmd
 }
