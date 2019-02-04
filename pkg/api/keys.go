@@ -105,23 +105,23 @@ func generateSSHPublicKey(privateKey *rsa.PublicKey) ([]byte, error) {
 	return ssh.MarshalAuthorizedKey(pub), nil
 }
 
-func serializePrivateKey(privateKey *rsa.PrivateKey) []byte {
+func serializePrivateKey(privateKey *rsa.PrivateKey, uid uuid.UUID) []byte {
 	privateKeySerialized := x509.MarshalPKCS1PrivateKey(privateKey)
 	privateKeyPemBlock := pem.Block{
 		Type:    "RSA PRIVATE KEY",
-		Headers: map[string]string{"foo": "oof", "bar": "rab"},
+		Headers: map[string]string{"uid": uid.String()},
 		Bytes:   privateKeySerialized,
 	}
 	privateKeyPem := pem.EncodeToMemory(&privateKeyPemBlock)
 	return privateKeyPem
 }
 
-func generateAgentKeys() (pub []byte, priv []byte, err error) {
+func generateAgentKeys(uid uuid.UUID) (pub []byte, priv []byte, err error) {
 	privateKey, err := generatePrivateKey()
 	if err != nil {
 		return nil, nil, err
 	}
-	priv = serializePrivateKey(privateKey)
+	priv = serializePrivateKey(privateKey, uid)
 
 	pub, err = generateSSHPublicKey(&privateKey.PublicKey)
 	if err != nil {
@@ -136,7 +136,7 @@ func GenerateAgentCredentials() (*AgentCredentials, error) {
 	log.Debug().Msg("Generating new agent credentials.")
 	agentID := uuid.NewV4()
 
-	pub, priv, err := generateAgentKeys()
+	pub, priv, err := generateAgentKeys(agentID)
 	if err != nil {
 		return nil, err
 	}
