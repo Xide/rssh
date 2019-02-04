@@ -47,6 +47,35 @@ func (a *AgentCredentials) MarshalJSON() ([]byte, error) {
 	})
 }
 
+func (a *AgentCredentials) UnmarshalJSON(data []byte) error {
+	var dest = &struct {
+		ID         string `json:"aid"`
+		PublicKey  string `json:"public_key"`
+		PrivateKey string `json:"private_key"`
+	}{}
+	r := json.Unmarshal(data, dest)
+	if r != nil {
+		return r
+	}
+	uid, err := uuid.FromString(dest.ID)
+	if err != nil {
+		return err
+	}
+
+	pub, err := base64.StdEncoding.DecodeString(dest.PublicKey)
+	if err != nil {
+		return err
+	}
+	priv, err := base64.StdEncoding.DecodeString(dest.PrivateKey)
+	if err != nil {
+		return err
+	}
+	a.ID = uid
+	a.Identity = pub
+	a.Secret = priv
+	return nil
+}
+
 // DropSecrets removes user private informations from the AgentCredentials struct.
 func (a *AgentCredentials) DropSecrets() {
 	a.Secret = nil
