@@ -35,8 +35,10 @@ func NewCommand(flags *Flags) *cobra.Command {
 		Short: "Expose your SSH server.",
 		Long:  `Expose your SSH server.`,
 		RunE: func(cmd *cobra.Command, args []string) error {
+			log.Info().
+				Str("root-dir", flags.RootDirectory).
+				Msg("Starting RSSH agent.")
 			flags.Run()
-			log.Info().Msg("Exposing server to the world")
 			return nil
 		},
 	}
