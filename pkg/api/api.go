@@ -12,17 +12,17 @@ import (
 	"go.etcd.io/etcd/client"
 )
 
-// APIMeta represents metadatas about the running api.
+// Meta represents metadatas about the running api.
 // It will be persisted to etcd in order to configure
 // the gatekeepers.
-type APIMeta struct {
+type Meta struct {
 	BindDomain string `json:"domain"`
 	BindAddr   string `json:"addr"`
 	BindPort   uint16 `json:"port"`
 }
 
 type APIDispatcher struct {
-	Meta APIMeta
+	Meta Meta
 
 	etcdEndpoints []string
 	etcd          *client.KeysAPI
@@ -35,7 +35,7 @@ func NewDispatcher(
 	etcdEndpoints []string,
 ) (*APIDispatcher, error) {
 	return &APIDispatcher{
-		APIMeta{
+		Meta{
 			domain,
 			bindAddr,
 			bindPort,
