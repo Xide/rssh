@@ -4,6 +4,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 
+	"github.com/Xide/rssh/cmd/agent/register"
 	"github.com/Xide/rssh/pkg/agent"
 )
 
@@ -20,5 +21,7 @@ func NewCommand(flags *AgentFlags) *cobra.Command {
 			return nil
 		},
 	}
+
+	cmd.AddCommand(register.NewCommand())
 	return cmd
 }
