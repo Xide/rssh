@@ -26,7 +26,7 @@ func (g *GateKeeper) allocateAgentSlot(domain string) (*AgentSlot, error) {
 		}
 	}
 
-	port, err := findAvailablePort(g.lowPort, g.highPort)
+	port, err := findAvailablePort(g.Meta.LowPort, g.Meta.HighPort)
 	if err != nil {
 		return nil, err
 	}

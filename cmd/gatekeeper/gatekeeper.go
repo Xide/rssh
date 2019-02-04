@@ -78,9 +78,7 @@ func NewCommand(flags *GatekeeperFlags) *cobra.Command {
 					Str("error", err.Error()).
 					Msg("Could not start Gatekeeper")
 			}
-			// g.InitSSHServer()
-			// g.AllocateAgentSlot("")
-			return nil
+			return gatekeeper.Run()
 		},
 	}
 
