@@ -9,14 +9,14 @@ import (
 	"github.com/spf13/viper"
 )
 
-type APIFlags struct {
+type Flags struct {
 	BindAddr      string `mapstructure:"addr"`
 	BindPort      uint16 `mapstructure:"port"`
 	RootDomain    string `mapstructure:"domain"`
 	EtcdEndpoints []string
 }
 
-func parseArgs(flags *APIFlags) {
+func parseArgs(flags *Flags) {
 	// Shared resource not directly available through mapstructure
 	flags.EtcdEndpoints = utils.SplitParts(viper.GetStringSlice("etcd.endpoints"))
 
@@ -28,7 +28,7 @@ func parseArgs(flags *APIFlags) {
 	}
 }
 
-func NewCommand(flags *APIFlags) *cobra.Command {
+func NewCommand(flags *Flags) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "api",
 		Short: "Run the RSSH public HTTP API.",
