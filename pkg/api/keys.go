@@ -102,8 +102,8 @@ func generateAgentKeys() (pub []byte, priv []byte, err error) {
 
 // GenerateAgentCredentials create a new identity from scratch for an agent.
 // The identity consist of a pair of ssh keys and an UUID.
-func GenerateAgentCredentials(domain string) (*AgentCredentials, error) {
-	log.Debug().Str("domain", domain).Msg("Generating new agent credentials.")
+func GenerateAgentCredentials() (*AgentCredentials, error) {
+	log.Debug().Msg("Generating new agent credentials.")
 	agentID := uuid.NewV4()
 
 	pub, priv, err := generateAgentKeys()
@@ -117,7 +117,6 @@ func GenerateAgentCredentials(domain string) (*AgentCredentials, error) {
 		Secret:   priv,
 	}
 	log.Debug().
-		Str("domain", domain).
 		Str("Identity", agentID.String()).
 		Msg("Generated account credentials.")
 	return credentials, nil
