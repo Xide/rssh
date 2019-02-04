@@ -24,7 +24,7 @@ type registerError struct {
 // RegisterResponse serialize a registration response.
 type RegisterResponse struct {
 	AgentID *AgentCredentials `json:"agentID"`
-	Err     *string           `json:"error"`
+	Err     *registerError    `json:"error"`
 }
 
 // MWithNewAgentCredentials is a middleware that inject new agent credentials in the

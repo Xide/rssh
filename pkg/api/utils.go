@@ -39,9 +39,11 @@ func respond(ctx *fasthttp.RequestCtx, v interface{}) error {
 
 func failRequest(ctx *fasthttp.RequestCtx, msg string, code int) {
 	ctx.SetStatusCode(code)
-	resp := registerError{
-		Msg:  msg,
-		Code: code,
+	resp := RegisterResponse{
+		Err: &registerError{
+			Msg:  msg,
+			Code: code,
+		},
 	}
 	respond(ctx, resp)
 }
