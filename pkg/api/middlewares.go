@@ -43,6 +43,9 @@ func MValidateAuthenticationRequest(h fasthttp.RequestHandler, etcd client.KeysA
 	})
 }
 
+// MValidateDomainIsAvailable will check for the presence of the domain in etcd. It will only
+// pass requests to the subsequent handler if the domain isn't already reserved. Otherwise,
+// it can yield 403 code for an already registered domain or 500 in case of an etcd failure.
 func MValidateDomainIsAvailable(h fasthttp.RequestHandler, etcd client.KeysAPI) fasthttp.RequestHandler {
 	return fasthttp.RequestHandler(func(ctx *fasthttp.RequestCtx) {
 		domain := getDomain(ctx)
