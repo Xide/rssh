@@ -34,7 +34,7 @@ type RegisterResponse struct {
 func MWithNewAgentCredentials(h fasthttp.RequestHandler, etcd client.KeysAPI) fasthttp.RequestHandler {
 	return fasthttp.RequestHandler(func(ctx *fasthttp.RequestCtx) {
 		domain := getDomain(ctx)
-		creds, err := GenerateAgentCredentials(domain)
+		creds, err := GenerateAgentCredentials()
 
 		if err != nil {
 			log.Error().
