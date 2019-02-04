@@ -7,9 +7,11 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+// AgentSlot represents a pending or active authorized connection
+// to the GateKeeper.
 type AgentSlot struct {
+	// Subdomain on which the agent is registered
 	Domain      string `json:"domain"`
-	Host        string `json:"host"`
 	Port        uint16 `json:"port"`
 	AgentID     string `json:"agentID"`
 	Established bool   `json:"established"`
@@ -33,7 +35,6 @@ func (g *GateKeeper) allocateAgentSlot(domain string) (*AgentSlot, error) {
 
 	slot := &AgentSlot{
 		Domain:      domain,
-		Host:        "127.0.0.1",
 		Port:        port,
 		AgentID:     "test",
 		Established: false,
