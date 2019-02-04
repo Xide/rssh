@@ -21,7 +21,9 @@ type Meta struct {
 	BindPort   uint16 `json:"port"`
 }
 
-type APIDispatcher struct {
+// Dispatcher is the API entry point, it will compose the middlewares
+// flow and pass them the request
+type Dispatcher struct {
 	Meta Meta
 
 	etcdEndpoints []string
@@ -33,8 +35,8 @@ func NewDispatcher(
 	bindPort uint16,
 	domain string,
 	etcdEndpoints []string,
-) (*APIDispatcher, error) {
-	return &APIDispatcher{
+) (*Dispatcher, error) {
+	return &Dispatcher{
 		Meta{
 			domain,
 			bindAddr,
@@ -46,7 +48,7 @@ func NewDispatcher(
 }
 
 // announce write the current parameters and Metadatas to the etcd cluster.
-func (api *APIDispatcher) announce() error {
+func (api *Dispatcher) announce() error {
 	m, err := json.Marshal(api.Meta)
 	if err != nil {
 		return err
@@ -62,7 +64,7 @@ func (api *APIDispatcher) announce() error {
 	return nil
 }
 
-func (api *APIDispatcher) Run() error {
+func (api *Dispatcher) Run() error {
 
 	kapi, err := utils.GetEtcdKey(api.etcdEndpoints)
 	if err != nil {

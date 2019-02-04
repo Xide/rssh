@@ -24,7 +24,7 @@ func (r *AuthRequest) Validate() error {
 	return nil
 }
 
-func (api *APIDispatcher) authHandlerWrapped(ctx *fasthttp.RequestCtx) {
+func (api *Dispatcher) authHandlerWrapped(ctx *fasthttp.RequestCtx) {
 	log.Debug().Str("domain", getDomain(ctx)).Msg("Received new auth request.")
 	token := getIdentity(ctx)
 	req := AuthRequest{
@@ -51,8 +51,8 @@ func (api *APIDispatcher) authHandlerWrapped(ctx *fasthttp.RequestCtx) {
 
 // AuthHandler is the entrypoint for an HTTP POST request in the API
 // It uses several middlewares to validate requests, and pass the valid
-// requests down to APIDispatcher.registerHandlerWrapper
-func (api *APIDispatcher) AuthHandler(ctx *fasthttp.RequestCtx) {
+// requests down to Dispatcher.registerHandlerWrapper
+func (api *Dispatcher) AuthHandler(ctx *fasthttp.RequestCtx) {
 	MValidateDomain(
 		MValidateAuthenticationRequest(
 			api.authHandlerWrapped,

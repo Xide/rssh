@@ -104,7 +104,7 @@ func MWithDomainLease(h fasthttp.RequestHandler, etcd client.KeysAPI) fasthttp.R
 
 // registerHandlerWrapped serialize the generated agent credentials and return
 // them via JSON in the response body.
-func (api *APIDispatcher) registerHandlerWrapped(ctx *fasthttp.RequestCtx) {
+func (api *Dispatcher) registerHandlerWrapped(ctx *fasthttp.RequestCtx) {
 	resp := RegisterResponse{
 		AgentID: ctx.UserValue("credentials").(*AgentCredentials),
 		Err:     nil,
@@ -120,8 +120,8 @@ func (api *APIDispatcher) registerHandlerWrapped(ctx *fasthttp.RequestCtx) {
 
 // RegisterHandler is the entrypoint for an HTTP POST request in the API
 // It uses several middlewares to validate requests, and pass the valid
-// requests down to APIDispatcher.registerHandlerWrapper
-func (api *APIDispatcher) RegisterHandler(ctx *fasthttp.RequestCtx) {
+// requests down to Dispatcher.registerHandlerWrapper
+func (api *Dispatcher) RegisterHandler(ctx *fasthttp.RequestCtx) {
 	MValidateDomain(
 		MValidateDomainIsAvailable(
 			MWithNewAgentCredentials(
