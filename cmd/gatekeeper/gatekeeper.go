@@ -82,41 +82,41 @@ func NewCommand(flags *GatekeeperFlags) *cobra.Command {
 		},
 	}
 
-	cmd.PersistentFlags().StringVarP(
+	cmd.Flags().StringVarP(
 		&flags.BindAddr,
 		"addr",
 		"a",
 		"0.0.0.0",
 		"SSH server address",
 	)
-	viper.BindPFlag("api.addr", cmd.PersistentFlags().Lookup("addr"))
+	viper.BindPFlag("api.addr", cmd.Flags().Lookup("addr"))
 
-	cmd.PersistentFlags().Uint16VarP(
+	cmd.Flags().Uint16VarP(
 		&flags.BindPort,
 		"port",
 		"p",
 		2223,
 		"SSH server port",
 	)
-	viper.BindPFlag("gatekeeper.port", cmd.PersistentFlags().Lookup("port"))
+	viper.BindPFlag("gatekeeper.port", cmd.Flags().Lookup("port"))
 
-	cmd.PersistentFlags().StringSliceVarP(
+	cmd.Flags().StringSliceVarP(
 		&flags.EtcdEndpoints,
 		"etcd",
 		"e",
 		[]string{"http://127.0.0.1:2379"},
 		"Comma separated list of the Etcd hosts to discover",
 	)
-	viper.BindPFlag("etcd.endpoints", cmd.PersistentFlags().Lookup("etcd"))
+	viper.BindPFlag("etcd.endpoints", cmd.Flags().Lookup("etcd"))
 
-	cmd.PersistentFlags().StringVarP(
+	cmd.Flags().StringVarP(
 		&flags.SSHPortRange,
 		"port-range",
 		"r",
 		"31240-65535",
 		"Port range where RSSH will bind the agents listener on (format: '$min-$max')",
 	)
-	viper.BindPFlag("gatekeeper.ssh_port_range", cmd.PersistentFlags().Lookup("port-range"))
+	viper.BindPFlag("gatekeeper.ssh_port_range", cmd.Flags().Lookup("port-range"))
 
 	return cmd
 }
