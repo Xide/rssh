@@ -7,7 +7,6 @@ import (
 	"crypto/x509"
 	"errors"
 	"fmt"
-	// "crypto/sha512"
 
 	"encoding/base64"
 	"encoding/json"
@@ -19,7 +18,10 @@ import (
 	"golang.org/x/crypto/ssh"
 )
 
-// AgentCredentials represent the
+// AgentCredentials represent the in memory structure of
+// an agent identity. The field Secret is optional, and can
+// safely be set to nil for most operations. A function depending
+// on the Secret variable needs to check for it's existence beforehand.
 type AgentCredentials struct {
 	ID uuid.UUID
 	// Agent public SSH Key
@@ -28,6 +30,8 @@ type AgentCredentials struct {
 	Secret []byte
 }
 
+// MarshalJSON allow to customize JSON marshaling in order to encode all
+// byte arrays as base64 strings.
 func (a *AgentCredentials) MarshalJSON() ([]byte, error) {
 	if a.Identity == nil {
 		return nil, errors.New("missing identity to generate agent id")
@@ -43,6 +47,7 @@ func (a *AgentCredentials) MarshalJSON() ([]byte, error) {
 	})
 }
 
+// DropSecrets removes user private informations from the AgentCredentials struct.
 func (a *AgentCredentials) DropSecrets() {
 	a.Secret = nil
 }
@@ -95,6 +100,8 @@ func generateAgentKeys() (pub []byte, priv []byte, err error) {
 	return pub, priv, nil
 }
 
+// GenerateAgentCredentials create a new identity from scratch for an agent.
+// The identity consist of a pair of ssh keys and an UUID.
 func GenerateAgentCredentials(domain string) (*AgentCredentials, error) {
 	log.Debug().Str("domain", domain).Msg("Generating new agent credentials.")
 	agentID := uuid.NewV4()
@@ -116,6 +123,7 @@ func GenerateAgentCredentials(domain string) (*AgentCredentials, error) {
 	return credentials, nil
 }
 
+// PersistAgentCredentials stores the agent identity in etcd.
 func PersistAgentCredentials(etcd client.KeysAPI, creds AgentCredentials) error {
 	log.Debug().
 		Str("agent", creds.ID.String())
