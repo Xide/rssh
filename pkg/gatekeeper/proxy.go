@@ -17,7 +17,9 @@ func (g *GateKeeper) proxyCommandHandler() func(ssh.Session) {
 			log.Debug().Str("domain", destDomain).Msg("Client requested proxy")
 			for x := 0; x < len(g.clients); x++ {
 				if strings.Compare(destDomain, g.clients[x].Domain) == 0 {
-					backendAddr := fmt.Sprintf("%s:%d", g.clients[x].Host, g.clients[x].Port)
+					// 127.0.0.1 is assumed here as we can only have one
+					// active gatekeeper at the same time.
+					backendAddr := fmt.Sprintf("127.0.0.1:%d", g.clients[x].Port)
 					conn, err := net.Dial("tcp", backendAddr)
 					if err != nil {
 						log.Warn().
