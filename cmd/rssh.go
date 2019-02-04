@@ -26,7 +26,7 @@ type Flags struct {
 	ConfigFile      string
 	APIFlags        api.APIFlags               `mapstructure:"api"`
 	GatekeeperFlags gatekeeper.GatekeeperFlags `mapstructure:"gatekeeper"`
-	AgentFlags      agent.AgentFlags           `mapstructure:"agent"`
+	AgentFlags      agent.Flags                `mapstructure:"agent"`
 }
 
 func parseLogLevel(strLevel string) zerolog.Level {

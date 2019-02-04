@@ -13,8 +13,8 @@ import (
 	"github.com/Xide/rssh/pkg/agent"
 )
 
-// AgentFlags unmarshall directly to the agent definition
-type AgentFlags = agent.Agent
+// Flags unmarshall directly to the agent definition
+type Flags = agent.Agent
 
 func getRSSHBaseDirectory() string {
 	user, err := user.Current()
@@ -29,7 +29,7 @@ func getRSSHBaseDirectory() string {
 }
 
 // NewCommand return the agent entrypoint command
-func NewCommand(flags *AgentFlags) *cobra.Command {
+func NewCommand(flags *Flags) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "agent",
 		Short: "Expose your SSH server.",
