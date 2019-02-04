@@ -90,8 +90,8 @@ func NewCommand(flags *Flags) *cobra.Command {
 
 	cmd.AddCommand(version.NewCommand())
 	cmd.AddCommand(agent.NewCommand(&flags.AgentFlags))
-	cmd.AddCommand(api.NewCommand(&flags.Flags))
-	cmd.AddCommand(gatekeeper.NewCommand(&flags.Flags))
+	cmd.AddCommand(api.NewCommand(&flags.APIFlags))
+	cmd.AddCommand(gatekeeper.NewCommand(&flags.GatekeeperFlags))
 
 	return cmd
 }
