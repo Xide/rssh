@@ -47,6 +47,7 @@ func (a *AgentCredentials) MarshalJSON() ([]byte, error) {
 	})
 }
 
+// UnmarshalJSON allow to decode base64 encoded agent credentials
 func (a *AgentCredentials) UnmarshalJSON(data []byte) error {
 	var dest = &struct {
 		ID         string `json:"aid"`
