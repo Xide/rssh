@@ -4,6 +4,7 @@ import (
 	"errors"
 	"strconv"
 
+	"github.com/Xide/rssh/pkg/agent"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -11,16 +12,7 @@ import (
 
 // Flags are the command line / environment flags
 // accepted by the `rssh agent register` command.
-type Flags struct {
-	// Requested domain FQDN (including RSSH root domain)
-	Domain string
-	// Host to expose
-	Host string
-	// Port to expose
-	Port uint16
-	// Port on which the API listen to requests on the root domain
-	APIPort uint16
-}
+type Flags = agent.RegisterRequest
 
 func parseArgsE(flags *Flags) error {
 	flags.Domain = viper.GetString("register.domain")
@@ -38,7 +30,7 @@ func parseArgsE(flags *Flags) error {
 }
 
 // NewCommand return the agent registration cobra command
-func NewCommand() *cobra.Command {
+func NewCommand(agent *agent.Agent) *cobra.Command {
 	flags := Flags{}
 	cmd := &cobra.Command{
 		Use:   "register",
@@ -53,6 +45,15 @@ func NewCommand() *cobra.Command {
 				Str("Host", flags.Host).
 				Uint16("Port", flags.Port).
 				Msg("Register new endpoint")
+
+			if err := agent.RegisterHost(&flags); err != nil {
+				log.Fatal().
+					Str("error", err.Error()).
+					Str("domain", flags.Domain).
+					Str("Host", flags.Host).
+					Uint16("Port", flags.Port).
+					Msg("Domain registration failed.")
+			}
 			return nil
 		},
 	}
@@ -87,7 +88,7 @@ func NewCommand() *cobra.Command {
 	cmd.Flags().Uint16Var(
 		&flags.APIPort,
 		"api-port",
-		22,
+		9321,
 		"Port on which the HTTP API will listen on the root domain",
 	)
 	viper.BindPFlag("api.port", cmd.Flags().Lookup("api-port"))
