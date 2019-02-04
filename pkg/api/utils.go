@@ -2,6 +2,8 @@ package api
 
 import (
 	"encoding/json"
+	"errors"
+	"regexp"
 
 	"github.com/rs/zerolog/log"
 	"github.com/valyala/fasthttp"
@@ -47,4 +49,13 @@ func failRequest(ctx *fasthttp.RequestCtx, msg string, code int) {
 		Code: code,
 	}
 	respond(ctx, resp)
+}
+
+// ValidateDomain returns an error if the parameter is not a valid subdomain
+// We only allow alphanumeric characters
+func ValidateDomain(domain string) error {
+	if match, _ := regexp.MatchString("^[a-zA-Z0-9]+$", domain); !match {
+		return errors.New("illegal characters in requested domain")
+	}
+	return nil
 }

@@ -2,23 +2,12 @@ package api
 
 import (
 	"context"
-	"errors"
 	"fmt"
-	"regexp"
 
 	"github.com/rs/zerolog/log"
 	"github.com/valyala/fasthttp"
 	"go.etcd.io/etcd/client"
 )
-
-// ValidateDomain returns an error if the parameter is not a valid subdomain
-// We only allow alphanumeric characters
-func ValidateDomain(domain string) error {
-	if match, _ := regexp.MatchString("^[a-zA-Z0-9]+$", domain); !match {
-		return errors.New("illegal characters in requested domain")
-	}
-	return nil
-}
 
 // MValidateDomain is a middleware handling agent registration subdomain validation
 func MValidateDomain(h fasthttp.RequestHandler) fasthttp.RequestHandler {
