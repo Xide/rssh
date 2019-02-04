@@ -17,8 +17,7 @@ func ensureDirectory(path string, mode os.FileMode) error {
 				return err
 			}
 		}
-	}
-	if !s.IsDir() {
+	} else if !s.IsDir() {
 		return errors.New("path is not a directory")
 	}
 	return nil
