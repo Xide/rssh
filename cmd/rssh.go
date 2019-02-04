@@ -23,7 +23,6 @@ const defaultLevel = zerolog.InfoLevel
 
 type Flags struct {
 	LogLevel        string `mapstructure:"log_level"`
-	RootDomain      string `mapstructure:"domain"`
 	ConfigFile      string
 	APIFlags        api.APIFlags               `mapstructure:"api"`
 	GatekeeperFlags gatekeeper.GatekeeperFlags `mapstructure:"gatekeeper"`
@@ -81,7 +80,6 @@ func NewCommand(flags *Flags) *cobra.Command {
 		"Log level (one of: debug,info,warn,error,fatal,panic)",
 	)
 	viper.BindPFlag("log_level", cmd.PersistentFlags().Lookup("log-level"))
-
 	cmd.PersistentFlags().StringVar(
 		&flags.ConfigFile,
 		"config",
