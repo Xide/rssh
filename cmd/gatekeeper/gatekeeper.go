@@ -72,13 +72,13 @@ func NewCommand(flags *GatekeeperFlags) *cobra.Command {
 				Uint16("port", flags.BindPort).
 				Str("port-range", flags.SSHPortRange).
 				Msg("Starting Gatekeeper")
-			_, err := gatekeeper.NewGateKeeper(flags.BindAddr, flags.BindPort)
+			g, err := gatekeeper.NewGateKeeper(flags.BindAddr, flags.BindPort)
 			if err != nil {
 				log.Fatal().
 					Str("error", err.Error()).
 					Msg("Could not start Gatekeeper")
 			}
-			return gatekeeper.Run()
+			return g.Run()
 		},
 	}
 
