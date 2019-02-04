@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"path"
 	"strings"
 
 	"github.com/Xide/rssh/pkg/api"
@@ -91,7 +92,7 @@ func (a *Agent) RegisterHost(req *RegisterRequest) error {
 		return err
 	}
 
-	err = persistKeyToDisk(".", req.Domain, creds)
+	err = persistKeyToDisk(path.Join(a.RootDirectory, "identities"), req.Domain, creds)
 	if err != nil {
 		return err
 	}
