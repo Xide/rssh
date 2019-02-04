@@ -42,13 +42,13 @@ func NewCommand(flags *Flags) *cobra.Command {
 	}
 
 	cmd.PersistentFlags().StringVarP(
-		&flags.SecretsDirectory,
-		"secrets-dir",
-		"s",
-		path.Join(getRSSHBaseDirectory(), "identities"),
+		&flags.RootDirectory,
+		"config-dir",
+		"c",
+		getRSSHBaseDirectory(),
 		"Directory used to store secret keys",
 	)
-	viper.BindPFlag("agent.secrets_directory", cmd.PersistentFlags().Lookup("secrets-dir"))
+	viper.BindPFlag("agent.root_directory", cmd.PersistentFlags().Lookup("config-dir"))
 
 	cmd.AddCommand(register.NewCommand(flags))
 	return cmd

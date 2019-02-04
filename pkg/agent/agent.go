@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"os"
 	"strings"
 
 	"github.com/Xide/rssh/pkg/api"
@@ -27,8 +26,8 @@ type ForwardedHost struct {
 // Agent is the main structure of this package, it gets deserialized from
 // the configuration file.
 type Agent struct {
-	Hosts            []ForwardedHost `json:"hosts" mapstructure:"hosts"`
-	SecretsDirectory string          `json:"secrets_directory" mapstructure:"secrets_directory"`
+	Hosts         []ForwardedHost `json:"hosts" mapstructure:"hosts"`
+	RootDirectory string          `json:"root_directory" mapstructure:"root_directory"`
 }
 
 // RegisterRequest is the
@@ -102,19 +101,7 @@ func (a *Agent) RegisterHost(req *RegisterRequest) error {
 	return nil
 }
 
-func (a *Agent) secureIdentityDirectory() error {
-	if err := os.Chmod(a.SecretsDirectory, 0700); err != nil {
-		return err
-	}
-	return nil
-}
-
 // Run is the entrypoint for the agent
 func (a *Agent) Run() {
-	if err := a.secureIdentityDirectory(); err != nil {
-		log.Warn().
-			Str("error", err.Error()).
-			Msg("Could not secure private keys directory.")
-	}
 
 }

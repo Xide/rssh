@@ -34,7 +34,7 @@ etcd:
 agent:
   ### Directory where the RSSH agent will keep the private / public key pairs
   ### to connect to registered domains (default: $HOME/.rssh)
-  # secrets_directory: /etc/rssh
+  # root_directory: /etc/rssh
   hosts:
     ### Each line in the hosts array describe a socket forwarded by the agent
     ### The forward destination MUST be an SSH server.
