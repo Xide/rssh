@@ -9,20 +9,28 @@ import (
 	"go.etcd.io/etcd/client"
 )
 
+// RegisterRequest is the parsed struct representing
+// an HTTP request on /register
 type RegisterRequest struct {
 	Host string
 }
 
+// registerError serialize a registration error in the JSON response
 type registerError struct {
 	Msg  string `json:"msg"`
 	Code int    `json:"code"`
 }
 
+// RegisterResponse serialize a registration response.
 type RegisterResponse struct {
 	AgentID *AgentCredentials `json:"agentID"`
 	Err     *string           `json:"error"`
 }
 
+// MWithNewAgentCredentials is a middleware that inject new agent credentials in the
+// context. The generated credentials can be accessed using `ctx.UserValue("credentials")`.
+// MWithNewAgentCredentials will fail with a 500 error code if there is an issue with the
+// credentials generation or the etcd comunication.
 func MWithNewAgentCredentials(h fasthttp.RequestHandler, etcd client.KeysAPI) fasthttp.RequestHandler {
 	return fasthttp.RequestHandler(func(ctx *fasthttp.RequestCtx) {
 		domain := getDomain(ctx)
@@ -50,6 +58,9 @@ func MWithNewAgentCredentials(h fasthttp.RequestHandler, etcd client.KeysAPI) fa
 	})
 }
 
+// MWithDomainLease is a middleware ensuring that the domain provided by an agent can
+// be allocated. If so, it will be allocated in the etcd and passed to subsequent handler.
+// Otherwise, it will return an HTTP 500 error.
 func MWithDomainLease(h fasthttp.RequestHandler, etcd client.KeysAPI) fasthttp.RequestHandler {
 	return fasthttp.RequestHandler(func(ctx *fasthttp.RequestCtx) {
 		domain := getDomain(ctx)
@@ -91,6 +102,8 @@ func MWithDomainLease(h fasthttp.RequestHandler, etcd client.KeysAPI) fasthttp.R
 	})
 }
 
+// registerHandlerWrapped serialize the generated agent credentials and return
+// them via JSON in the response body.
 func (api *APIDispatcher) registerHandlerWrapped(ctx *fasthttp.RequestCtx) {
 	resp := RegisterResponse{
 		AgentID: ctx.UserValue("credentials").(*AgentCredentials),
