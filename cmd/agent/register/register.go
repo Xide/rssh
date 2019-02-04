@@ -9,7 +9,9 @@ import (
 	"github.com/spf13/viper"
 )
 
-type RegisterFlags struct {
+// Flags are the command line / environment flags
+// accepted by the `rssh agent register` command.
+type Flags struct {
 	// Requested domain FQDN (including RSSH root domain)
 	Domain string
 	// Host to expose
@@ -18,7 +20,7 @@ type RegisterFlags struct {
 	Port uint16
 }
 
-func parseArgsE(flags *RegisterFlags) error {
+func parseArgsE(flags *Flags) error {
 	flags.Domain = viper.GetString("register.domain")
 	if len(flags.Domain) == 0 {
 		return errors.New("domain is mandatory")
@@ -35,7 +37,7 @@ func parseArgsE(flags *RegisterFlags) error {
 
 // NewCommand return the agent registration cobra command
 func NewCommand() *cobra.Command {
-	flags := RegisterFlags{}
+	flags := Flags{}
 	cmd := &cobra.Command{
 		Use:   "register",
 		Short: "Register a new endpoint to expose.",
