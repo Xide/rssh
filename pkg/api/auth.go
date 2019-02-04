@@ -8,15 +8,20 @@ import (
 	"github.com/valyala/fasthttp"
 )
 
+// AuthRequest describe the content of an authentication request
 type AuthRequest struct {
-	Domain  string
+	// domain the agent is attempting to bind to
+	Domain string
+	// UUID returned by the register API call
 	AgentID string
 }
 
+// AuthResponse describe the content of the authentication response
 type AuthResponse struct {
 	Port uint16 `json:"port"`
 }
 
+// Validate return an error if the agent id is invalid.
 func (r *AuthRequest) Validate() error {
 	if len(r.AgentID) == 0 {
 		return errors.New("Empty agent id")
@@ -24,6 +29,7 @@ func (r *AuthRequest) Validate() error {
 	return nil
 }
 
+// authHandlerWrapped is called at the sink of the middleware chain.
 func (api *Dispatcher) authHandlerWrapped(ctx *fasthttp.RequestCtx) {
 	log.Debug().Str("domain", getDomain(ctx)).Msg("Received new auth request.")
 	token := getIdentity(ctx)
