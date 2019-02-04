@@ -89,7 +89,7 @@ func NewCommand(flags *GatekeeperFlags) *cobra.Command {
 		"0.0.0.0",
 		"SSH server address",
 	)
-	viper.BindPFlag("api.addr", cmd.Flags().Lookup("addr"))
+	viper.BindPFlag("gatekeeper.ssh_addr", cmd.Flags().Lookup("addr"))
 
 	cmd.Flags().Uint16VarP(
 		&flags.BindPort,

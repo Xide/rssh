@@ -13,6 +13,8 @@ api:
 ## Gatekeeper is the public SSH frontend contacted by
 ## your clients to access the agent reverse forwarding
 gatekeeper:
+  ### Public gatekeeper SSH proxy host
+  ssh_addr: "0.0.0.0"
   ### Public gatekeeper SSH proxy port
   ssh_port: 2223
   ### Port range used by gatekeeper to allocate agents
