@@ -114,7 +114,7 @@ func (g *GateKeeper) collectClosedSession(ctx ssh.Context, slot *AgentSlot) {
 }
 
 // initSSHServer creates a new SSH server with
-// - routing logic throught command
+// - routing logic through command
 // - reverse port forwarding logic for agents
 func (g *GateKeeper) initSSHServer() error {
 	if g.srv != nil {
@@ -122,8 +122,8 @@ func (g *GateKeeper) initSSHServer() error {
 	}
 	addr := fmt.Sprintf("%s:%d", g.Meta.SSHAddr, g.Meta.SSHPort)
 	server := ssh.Server{
-		Addr:                          addr,
-		Handler:                       ssh.Handler(g.proxyCommandHandler()),
+		Addr:    addr,
+		Handler: ssh.Handler(g.proxyCommandHandler()),
 		ReversePortForwardingCallback: ssh.ReversePortForwardingCallback(g.reversePortForwardHandler()),
 	}
 	g.srv = &server

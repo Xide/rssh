@@ -17,7 +17,7 @@ type APIFlags struct {
 }
 
 func parseArgs(flags *APIFlags) {
-	// Shared resource not directly available throught mapstructure
+	// Shared resource not directly available through mapstructure
 	flags.EtcdEndpoints = utils.SplitParts(viper.GetStringSlice("etcd.endpoints"))
 
 	// Domain validation

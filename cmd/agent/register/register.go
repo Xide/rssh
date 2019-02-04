@@ -72,7 +72,7 @@ func NewCommand(agent *agent.Agent) *cobra.Command {
 		"host",
 		"a",
 		"127.0.0.1",
-		"Host to expose throught agent",
+		"Host to expose through agent",
 	)
 	viper.BindPFlag("register.host", cmd.Flags().Lookup("host"))
 
@@ -81,7 +81,7 @@ func NewCommand(agent *agent.Agent) *cobra.Command {
 		"port",
 		"p",
 		22,
-		"Port to expose throught agent",
+		"Port to expose through agent",
 	)
 	viper.BindPFlag("register.port", cmd.Flags().Lookup("port"))
 

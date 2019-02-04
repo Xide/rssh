@@ -41,7 +41,7 @@ func parsePortRange(raw string) (uint16, uint16, error) {
 }
 
 func parseArgsE(flags *GatekeeperFlags) error {
-	// Shared resource not directly available throught mapstructure
+	// Shared resource not directly available through mapstructure
 	flags.EtcdEndpoints = utils.SplitParts(viper.GetStringSlice("etcd.endpoints"))
 
 	// SSH port range parsing
