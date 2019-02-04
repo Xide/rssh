@@ -9,11 +9,6 @@ import (
 	"github.com/valyala/fasthttp"
 )
 
-type Endpoint struct {
-	Host string
-	Port uint16
-}
-
 func getIdentity(ctx *fasthttp.RequestCtx) string {
 	return ctx.UserValue("identity").(string)
 }
