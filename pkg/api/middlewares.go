@@ -27,7 +27,7 @@ func MValidateDomain(h fasthttp.RequestHandler) fasthttp.RequestHandler {
 //	- The domain is invalid
 //	- The agent is not registered for this domain
 func MValidateAuthenticationRequest(h fasthttp.RequestHandler, etcd client.KeysAPI) fasthttp.RequestHandler {
-	return MValidateDomain(fasthttp.RequestHandler(func(ctx *fasthttp.RequestCtx) {
+	return fasthttp.RequestHandler(func(ctx *fasthttp.RequestCtx) {
 		id := getIdentity(ctx)
 		if len(id) == 0 {
 			failRequest(ctx, "Empty identity", 400)
@@ -40,7 +40,7 @@ func MValidateAuthenticationRequest(h fasthttp.RequestHandler, etcd client.KeysA
 			return
 		}
 		h(ctx)
-	}))
+	})
 }
 
 func MValidateDomainIsAvailable(h fasthttp.RequestHandler, etcd client.KeysAPI) fasthttp.RequestHandler {
