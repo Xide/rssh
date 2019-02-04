@@ -30,6 +30,7 @@ type Dispatcher struct {
 	etcd          *client.KeysAPI
 }
 
+// NewDispatcher is a simple wrapper to construct a Dispatcher structure
 func NewDispatcher(
 	bindAddr string,
 	bindPort uint16,
@@ -64,6 +65,11 @@ func (api *Dispatcher) announce() error {
 	return nil
 }
 
+// Run is the entry point of the dispatcher.
+// it does the following:
+// - Connect to etcd
+// - Create the HTTP routes
+// - Listen and serve requests
 func (api *Dispatcher) Run() error {
 
 	kapi, err := utils.GetEtcdKey(api.etcdEndpoints)
