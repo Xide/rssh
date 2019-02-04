@@ -24,9 +24,9 @@ const defaultLevel = zerolog.InfoLevel
 type Flags struct {
 	LogLevel        string `mapstructure:"log_level"`
 	ConfigFile      string
-	APIFlags        api.APIFlags               `mapstructure:"api"`
-	GatekeeperFlags gatekeeper.GatekeeperFlags `mapstructure:"gatekeeper"`
-	AgentFlags      agent.Flags                `mapstructure:"agent"`
+	APIFlags        api.APIFlags     `mapstructure:"api"`
+	GatekeeperFlags gatekeeper.Flags `mapstructure:"gatekeeper"`
+	AgentFlags      agent.Flags      `mapstructure:"agent"`
 }
 
 func parseLogLevel(strLevel string) zerolog.Level {
@@ -91,7 +91,7 @@ func NewCommand(flags *Flags) *cobra.Command {
 	cmd.AddCommand(version.NewCommand())
 	cmd.AddCommand(agent.NewCommand(&flags.AgentFlags))
 	cmd.AddCommand(api.NewCommand(&flags.APIFlags))
-	cmd.AddCommand(gatekeeper.NewCommand(&flags.GatekeeperFlags))
+	cmd.AddCommand(gatekeeper.NewCommand(&flags.Flags))
 
 	return cmd
 }

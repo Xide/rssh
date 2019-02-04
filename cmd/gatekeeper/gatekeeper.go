@@ -13,7 +13,7 @@ import (
 	"github.com/spf13/viper"
 )
 
-type GatekeeperFlags struct {
+type Flags struct {
 	BindAddr      string `mapstructure:"ssh_addr"`
 	BindPort      uint16 `mapstructure:"ssh_port"`
 	SSHPortRange  string `mapstructure:"ssh_port_range"`
@@ -40,7 +40,7 @@ func parsePortRange(raw string) (uint16, uint16, error) {
 	return utils.Min(uint16(low), uint16(high)), utils.Max(uint16(low), uint16(high)), nil
 }
 
-func parseArgsE(flags *GatekeeperFlags) error {
+func parseArgsE(flags *Flags) error {
 	// Shared resource not directly available through mapstructure
 	flags.EtcdEndpoints = utils.SplitParts(viper.GetStringSlice("etcd.endpoints"))
 
@@ -58,7 +58,7 @@ func parseArgsE(flags *GatekeeperFlags) error {
 	return nil
 }
 
-func NewCommand(flags *GatekeeperFlags) *cobra.Command {
+func NewCommand(flags *Flags) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "gatekeeper",
 		Short: "Run the RSSH public ssh proxy.",
