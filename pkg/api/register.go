@@ -33,7 +33,7 @@ type RegisterResponse struct {
 // credentials generation or the etcd comunication.
 func MWithNewAgentCredentials(h fasthttp.RequestHandler, etcd client.KeysAPI) fasthttp.RequestHandler {
 	return fasthttp.RequestHandler(func(ctx *fasthttp.RequestCtx) {
-		domain := getDomain(ctx)
+		domain, _ := getDomain(ctx)
 		creds, err := GenerateAgentCredentials()
 
 		if err != nil {
@@ -63,7 +63,7 @@ func MWithNewAgentCredentials(h fasthttp.RequestHandler, etcd client.KeysAPI) fa
 // Otherwise, it will return an HTTP 500 error.
 func MWithDomainLease(h fasthttp.RequestHandler, etcd client.KeysAPI) fasthttp.RequestHandler {
 	return fasthttp.RequestHandler(func(ctx *fasthttp.RequestCtx) {
-		domain := getDomain(ctx)
+		domain, _ := getDomain(ctx)
 		credentials := *ctx.UserValue("credentials").(*AgentCredentials)
 		credentials.DropSecrets()
 		options := client.SetOptions{
@@ -113,8 +113,9 @@ func (api *Dispatcher) registerHandlerWrapped(ctx *fasthttp.RequestCtx) {
 		return
 	}
 
+	domain, _ := getDomain(ctx)
 	log.Info().
-		Str("Domain", getDomain(ctx)).
+		Str("Domain", domain).
 		Msg("New agent registered.")
 }
 

@@ -37,7 +37,7 @@ func (a *AgentCredentials) MarshalJSON() ([]byte, error) {
 		return nil, errors.New("missing identity to generate agent id")
 	}
 	return json.Marshal(&struct {
-		ID         string `json:"aid"`
+		ID         string `json:"ID"`
 		PublicKey  string `json:"public_key"`
 		PrivateKey string `json:"private_key"`
 	}{
@@ -50,7 +50,7 @@ func (a *AgentCredentials) MarshalJSON() ([]byte, error) {
 // UnmarshalJSON allow to decode base64 encoded agent credentials
 func (a *AgentCredentials) UnmarshalJSON(data []byte) error {
 	var dest = &struct {
-		ID         string `json:"aid"`
+		ID         string `json:"ID"`
 		PublicKey  string `json:"public_key"`
 		PrivateKey string `json:"private_key"`
 	}{}

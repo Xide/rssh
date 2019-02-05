@@ -1,11 +1,14 @@
 package api
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 
 	"github.com/rs/zerolog/log"
 	"github.com/valyala/fasthttp"
+
+	"github.com/Xide/rssh/pkg/gatekeeper"
 )
 
 // AuthRequest describe the content of an authentication request
@@ -31,13 +34,19 @@ func (r *AuthRequest) Validate() error {
 
 // authHandlerWrapped is called at the sink of the middleware chain.
 func (api *Dispatcher) authHandlerWrapped(ctx *fasthttp.RequestCtx) {
-	log.Debug().Str("domain", getDomain(ctx)).Msg("Received new auth request.")
-	token := getIdentity(ctx)
+
+	// Ignoring errors here as it already been checked by the middlewares.
+	domain, _ := getDomain(ctx)
+	token, _ := getIdentity(ctx)
+
+	log.Debug().Str("domain", domain).Msg("Received new auth request.")
+
 	req := AuthRequest{
 		AgentID: string(token),
-		Domain:  getDomain(ctx),
+		Domain:  domain,
 	}
 	if err := req.Validate(); err != nil {
+		log.Debug().Str("error", err.Error()).Msg("Failed to validate auth request.")
 		failRequest(ctx, err.Error(), 400)
 		return
 	}
@@ -45,8 +54,17 @@ func (api *Dispatcher) authHandlerWrapped(ctx *fasthttp.RequestCtx) {
 		Str("token", string(token)).
 		Msg("Auth request parsed")
 
+	// Get Gatekeeper port
+	gk := ctx.UserValue("gatekeeper").(string)
+	gMeta := &gatekeeper.Meta{}
+	err := json.Unmarshal([]byte(gk), gMeta)
+	if err != nil {
+		log.Warn().Str("error", err.Error()).Msg("Failed to serialize internal gatekeeper state.")
+		failRequest(ctx, "Failed to load Gatekeeper state.", 500)
+		return
+	}
 	// Create an available slot for the agent to connect to.
-	resp := AuthResponse{Port: 0}
+	resp := AuthResponse{Port: gMeta.SSHPort}
 
 	respond(ctx, resp)
 	log.Info().
@@ -61,7 +79,10 @@ func (api *Dispatcher) authHandlerWrapped(ctx *fasthttp.RequestCtx) {
 func (api *Dispatcher) AuthHandler(ctx *fasthttp.RequestCtx) {
 	MValidateDomain(
 		MValidateAuthenticationRequest(
-			api.authHandlerWrapped,
+			MWithGatekeeperMeta(
+				api.authHandlerWrapped,
+				*api.etcd,
+			),
 			*api.etcd,
 		),
 	)(ctx)

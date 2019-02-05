@@ -9,12 +9,18 @@ import (
 	"github.com/valyala/fasthttp"
 )
 
-func getIdentity(ctx *fasthttp.RequestCtx) string {
-	return ctx.UserValue("identity").(string)
+func getIdentity(ctx *fasthttp.RequestCtx) (string, error) {
+	if ctx.QueryArgs().Peek("identity") == nil {
+		return "", errors.New("invalid null identity")
+	}
+	return string(ctx.QueryArgs().Peek("identity")), nil
 }
 
-func getDomain(ctx *fasthttp.RequestCtx) string {
-	return ctx.UserValue("domain").(string)
+func getDomain(ctx *fasthttp.RequestCtx) (string, error) {
+	if ctx.UserValue("domain") == nil {
+		return "", errors.New("invalid null domain")
+	}
+	return ctx.UserValue("domain").(string), nil
 }
 
 func respond(ctx *fasthttp.RequestCtx, v interface{}) error {
