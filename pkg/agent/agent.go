@@ -10,6 +10,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"path"
+	"strconv"
 	"strings"
 
 	"github.com/Xide/rssh/pkg/api"
@@ -80,6 +81,17 @@ func registerRequest(url string) (*api.AgentCredentials, error) {
 	return registerResponse.AgentID, nil
 }
 
+func embedHostConfiguration(creds *api.AgentCredentials, req *RegisterRequest) error {
+	block, _ := pem.Decode(creds.Secret)
+	if block == nil || block.Type != "RSA PRIVATE KEY" {
+		return errors.New("invalid PEM block")
+	}
+	block.Headers["host"] = req.Host
+	block.Headers["port"] = strconv.FormatUint(uint64(req.Port), 10)
+	creds.Secret = pem.EncodeToMemory(block)
+	return nil
+}
+
 // RegisterHost contact the API to retreive credentials for domain `req.Domain`
 func (a *Agent) RegisterHost(req *RegisterRequest) error {
 	rootDomain := strings.Join(strings.Split(req.Domain, ".")[1:], ".")
@@ -95,6 +107,11 @@ func (a *Agent) RegisterHost(req *RegisterRequest) error {
 		req.APIPort,
 		subDomain,
 	))
+	if err != nil {
+		return err
+	}
+
+	err = embedHostConfiguration(creds, req)
 	if err != nil {
 		return err
 	}
