@@ -1,30 +1,69 @@
 package agent
 
 import (
+	"encoding/pem"
 	"errors"
-	"fmt"
 	"io/ioutil"
 	"path"
+	"strconv"
+	"strings"
 
 	"github.com/Xide/rssh/pkg/api"
+	"github.com/rs/zerolog/log"
 )
 
-func persistKeyToDisk(
-	configDir string,
-	domain string,
-	creds *api.AgentCredentials,
-) error {
-	if creds == nil {
-		return errors.New("empty credentials cannot be persisted")
+func embedHostConfiguration(creds *api.AgentCredentials, req *RegisterRequest) error {
+	block, _ := pem.Decode(creds.Secret)
+	if block == nil || block.Type != "RSA PRIVATE KEY" {
+		return errors.New("invalid PEM block")
 	}
-	keyName := fmt.Sprintf("id_rsa.%s", domain)
-	err := ioutil.WriteFile(path.Join(configDir, keyName), creds.Secret, 0600)
-	if err != nil {
-		return err
-	}
-	err = ioutil.WriteFile(path.Join(configDir, keyName+".pub"), creds.Identity, 0644)
-	if err != nil {
-		return err
-	}
+	block.Headers["host"] = req.Host
+	block.Headers["port"] = strconv.FormatUint(uint64(req.Port), 10)
+	creds.Secret = pem.EncodeToMemory(block)
 	return nil
+}
+
+func (a *Agent) synchronizeIdentities() error {
+	hosts := []ForwardedHost{}
+	keys, err := filterPublicKeys(path.Join(a.RootDirectory, "identities"))
+	if err != nil {
+		return err
+	}
+	for _, idFile := range keys {
+		fw, err := parseFwdHostFromFile(
+			path.Join(
+				a.RootDirectory,
+				"identities",
+				idFile,
+			),
+		)
+		if err != nil {
+			log.Warn().
+				Str("error", err.Error()).
+				Str("file", idFile).
+				Msg("Could not load identity")
+			continue
+		}
+		hosts = append(hosts, *fw)
+		log.Debug().
+			Str("identity", fw.UID).
+			Str("file", idFile).
+			Msg("Identity imported.")
+	}
+	a.hosts = hosts
+	return nil
+}
+
+func filterPublicKeys(path string) ([]string, error) {
+	files, err := ioutil.ReadDir(path)
+	if err != nil {
+		return nil, err
+	}
+	res := []string{}
+	for _, f := range files {
+		if !strings.HasSuffix(f.Name(), ".pub") {
+			res = append(res, f.Name())
+		}
+	}
+	return res, nil
 }
