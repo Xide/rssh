@@ -35,10 +35,3 @@ agent:
   ### Directory where the RSSH agent will keep the private / public key pairs
   ### to connect to registered domains (default: $HOME/.rssh)
   # root_directory: /etc/rssh
-  hosts:
-    ### Each line in the hosts array describe a socket forwarded by the agent
-    ### The forward destination MUST be an SSH server.
-    -
-      domain: test.baguette.localhost
-      host: 127.0.0.1
-      port: 22
