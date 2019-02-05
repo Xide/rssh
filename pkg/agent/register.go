@@ -13,6 +13,7 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+// RegisterRequest is the result of a `rssh agent register ...` command.
 type RegisterRequest struct {
 	// Requested domain FQDN (including RSSH root domain)
 	Domain string
