@@ -78,6 +78,7 @@ func NewCommand(flags *Flags) *cobra.Command {
 					Str("error", err.Error()).
 					Msg("Could not start Gatekeeper")
 			}
+			g.WithEtcdE(flags.EtcdEndpoints)
 			return g.Run()
 		},
 	}
