@@ -36,8 +36,8 @@ type ForwardedHost struct {
 // Agent is the main structure of this package, it gets deserialized from
 // the configuration file.
 type Agent struct {
-	Hosts         []ForwardedHost `json:"hosts" mapstructure:"hosts"`
-	RootDirectory string          `json:"root_directory" mapstructure:"root_directory"`
+	hosts         []ForwardedHost
+	RootDirectory string `json:"root_directory" mapstructure:"root_directory"`
 }
 
 // RegisterRequest is the
@@ -204,7 +204,7 @@ func (a *Agent) synchronizeIdentities() error {
 			Str("file", idFile).
 			Msg("Identity imported.")
 	}
-	a.Hosts = hosts
+	a.hosts = hosts
 	return nil
 }
 
@@ -234,4 +234,7 @@ func (a *Agent) loadIdentities() error {
 func (a *Agent) Run() {
 	a.setupFileSystem()
 	a.loadIdentities()
+	log.Info().
+		Int("hosts_count", len(a.hosts)).
+		Msg("Finished hosts import.")
 }
