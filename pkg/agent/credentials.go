@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"path"
 
 	"github.com/Xide/rssh/pkg/api"
 )
@@ -17,11 +18,11 @@ func persistKeyToDisk(
 		return errors.New("empty credentials cannot be persisted")
 	}
 	keyName := fmt.Sprintf("id_rsa.%s", domain)
-	err := ioutil.WriteFile(keyName, creds.Secret, 0600)
+	err := ioutil.WriteFile(path.Join(configDir, keyName), creds.Secret, 0600)
 	if err != nil {
 		return err
 	}
-	err = ioutil.WriteFile(keyName+".pub", creds.Identity, 0644)
+	err = ioutil.WriteFile(path.Join(configDir, keyName+".pub"), creds.Identity, 0644)
 	if err != nil {
 		return err
 	}
