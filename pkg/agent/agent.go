@@ -1,7 +1,10 @@
 package agent
 
 import (
+	"crypto/rsa"
+	"crypto/x509"
 	"encoding/json"
+	"encoding/pem"
 	"errors"
 	"fmt"
 	"io/ioutil"
@@ -22,6 +25,10 @@ type ForwardedHost struct {
 	Host string `json:"host" mapstructure:"host"`
 	// Port on which the agent will connect to
 	Port uint16 `json:"port" mapstructure:"ports"`
+	// UUID assigned to the agent
+	UID string
+
+	privateKey *rsa.PrivateKey
 }
 
 // Agent is the main structure of this package, it gets deserialized from
@@ -102,8 +109,131 @@ func (a *Agent) RegisterHost(req *RegisterRequest) error {
 	return nil
 }
 
+func parseUIDFromFile(file string) (string, error) {
+	pemEncoded, err := ioutil.ReadFile(file)
+	if err != nil {
+		return "", err
+	}
+	block, _ := pem.Decode(pemEncoded)
+	if block == nil || block.Type != "RSA PRIVATE KEY" {
+		return "", errors.New("invalid PEM block")
+	}
+	if len(block.Headers["uid"]) == 0 {
+		return "", errors.New("invalid UID encoded in private key")
+	}
+	return block.Headers["uid"], nil
+}
+
+func parsePrivatekeyFromFile(file string) (*rsa.PrivateKey, error) {
+	pemEncoded, err := ioutil.ReadFile(file)
+	if err != nil {
+		return nil, err
+	}
+	block, _ := pem.Decode(pemEncoded)
+	if block == nil || block.Type != "RSA PRIVATE KEY" {
+		return nil, errors.New("invalid PEM block")
+	}
+	priv, err := x509.ParsePKCS1PrivateKey(block.Bytes)
+	if err != nil {
+		return nil, err
+	}
+	return priv, nil
+}
+
+func (a *Agent) orphanKeys() ([]string, error) {
+	orphans := []string{}
+	keys, err := filterPublicKeys(path.Join(a.RootDirectory, "identities"))
+	if err != nil {
+		return nil, err
+	}
+	for _, x := range keys {
+		found := false
+		for _, y := range a.Hosts {
+			if strings.Index(x, y.Domain) != -1 {
+				found = true
+				break
+			}
+		}
+		if !found {
+			orphans = append(orphans, x)
+		}
+	}
+	return orphans, nil
+}
+
+func (a *Agent) synchronizeIdentities() error {
+	for i, host := range a.Hosts {
+		idFile := fmt.Sprintf("id_rsa.%s", host.Domain)
+		id, err := parseUIDFromFile(
+			path.Join(
+				a.RootDirectory,
+				"identitites",
+				idFile,
+			),
+		)
+		if err != nil {
+			log.Warn().
+				Str("error", err.Error()).
+				Str("file", idFile).
+				Msg("Could not load identity")
+			a.Hosts = append(a.Hosts[:i], a.Hosts[i+1:]...)
+			continue
+		}
+		a.Hosts[i].UID = id
+
+		key, err := parsePrivatekeyFromFile(
+			path.Join(
+				a.RootDirectory,
+				"identitites",
+				idFile,
+			),
+		)
+		if err != nil {
+			log.Warn().
+				Str("error", err.Error()).
+				Str("file", idFile).
+				Msg("Could not parse identity secret key")
+			a.Hosts = append(a.Hosts[:i], a.Hosts[i+1:]...)
+			continue
+		}
+		a.Hosts[i].privateKey = key
+	}
+	return nil
+}
+
+func filterPublicKeys(path string) ([]string, error) {
+	files, err := ioutil.ReadDir(path)
+	if err != nil {
+		return nil, err
+	}
+	res := []string{}
+	for _, f := range files {
+		if !strings.HasSuffix(f.Name(), ".pub") {
+			res = append(res, f.Name())
+		}
+	}
+	return res, nil
+}
+
+func (a *Agent) loadIdentities() error {
+	err := a.synchronizeIdentities()
+	if err != nil {
+		return err
+	}
+	orphans, err := a.orphanKeys()
+	if err != nil {
+		return err
+	}
+	l := log.Debug()
+	for i, x := range orphans {
+		l.Str(fmt.Sprintf("orphan-%d", i), x)
+	}
+	l.Msg("Orphan keys (identities witout configuration) found.")
+	return nil
+}
+
 // Run is the entrypoint for the agent
 func (a *Agent) Run() {
 	a.setupFileSystem()
-
+	a.loadIdentities()
 }
