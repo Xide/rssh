@@ -10,6 +10,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"path"
+	"path/filepath"
 	"strconv"
 	"strings"
 
@@ -126,19 +127,38 @@ func (a *Agent) RegisterHost(req *RegisterRequest) error {
 	return nil
 }
 
-func parseUIDFromFile(file string) (string, error) {
+func parseFwdHostFromFile(file string) (*ForwardedHost, error) {
 	pemEncoded, err := ioutil.ReadFile(file)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	block, _ := pem.Decode(pemEncoded)
 	if block == nil || block.Type != "RSA PRIVATE KEY" {
-		return "", errors.New("invalid PEM block")
+		return nil, errors.New("invalid PEM block")
 	}
-	if len(block.Headers["uid"]) == 0 {
-		return "", errors.New("invalid UID encoded in private key")
+	for _, k := range []string{"uid", "host", "port"} {
+		if len(block.Headers[k]) == 0 {
+			return nil, fmt.Errorf("invalid %s encoded in private key", k)
+		}
 	}
-	return block.Headers["uid"], nil
+	fwPort, err := strconv.ParseUint(block.Headers["port"], 10, 16)
+	if err != nil {
+		return nil, err
+	}
+
+	pkey, err := parsePrivatekeyFromFile(file)
+	if err != nil {
+		return nil, err
+	}
+
+	fwHost := ForwardedHost{
+		UID:        block.Headers["uid"],
+		Host:       block.Headers["host"],
+		Port:       uint16(fwPort),
+		Domain:     strings.TrimPrefix(filepath.Base(file), "id_rsa."),
+		privateKey: pkey,
+	}
+	return &fwHost, nil
 }
 
 func parsePrivatekeyFromFile(file string) (*rsa.PrivateKey, error) {
@@ -157,34 +177,17 @@ func parsePrivatekeyFromFile(file string) (*rsa.PrivateKey, error) {
 	return priv, nil
 }
 
-func (a *Agent) orphanKeys() ([]string, error) {
-	orphans := []string{}
+func (a *Agent) synchronizeIdentities() error {
+	hosts := []ForwardedHost{}
 	keys, err := filterPublicKeys(path.Join(a.RootDirectory, "identities"))
 	if err != nil {
-		return nil, err
+		return err
 	}
-	for _, x := range keys {
-		found := false
-		for _, y := range a.Hosts {
-			if strings.Index(x, y.Domain) != -1 {
-				found = true
-				break
-			}
-		}
-		if !found {
-			orphans = append(orphans, x)
-		}
-	}
-	return orphans, nil
-}
-
-func (a *Agent) synchronizeIdentities() error {
-	for i, host := range a.Hosts {
-		idFile := fmt.Sprintf("id_rsa.%s", host.Domain)
-		id, err := parseUIDFromFile(
+	for _, idFile := range keys {
+		fw, err := parseFwdHostFromFile(
 			path.Join(
 				a.RootDirectory,
-				"identitites",
+				"identities",
 				idFile,
 			),
 		)
@@ -193,28 +196,15 @@ func (a *Agent) synchronizeIdentities() error {
 				Str("error", err.Error()).
 				Str("file", idFile).
 				Msg("Could not load identity")
-			a.Hosts = append(a.Hosts[:i], a.Hosts[i+1:]...)
 			continue
 		}
-		a.Hosts[i].UID = id
-
-		key, err := parsePrivatekeyFromFile(
-			path.Join(
-				a.RootDirectory,
-				"identitites",
-				idFile,
-			),
-		)
-		if err != nil {
-			log.Warn().
-				Str("error", err.Error()).
-				Str("file", idFile).
-				Msg("Could not parse identity secret key")
-			a.Hosts = append(a.Hosts[:i], a.Hosts[i+1:]...)
-			continue
-		}
-		a.Hosts[i].privateKey = key
+		hosts = append(hosts, *fw)
+		log.Debug().
+			Str("identity", fw.UID).
+			Str("file", idFile).
+			Msg("Identity imported.")
 	}
+	a.Hosts = hosts
 	return nil
 }
 
@@ -237,15 +227,6 @@ func (a *Agent) loadIdentities() error {
 	if err != nil {
 		return err
 	}
-	orphans, err := a.orphanKeys()
-	if err != nil {
-		return err
-	}
-	l := log.Debug()
-	for i, x := range orphans {
-		l.Str(fmt.Sprintf("orphan-%d", i), x)
-	}
-	l.Msg("Orphan keys (identities witout configuration) found.")
 	return nil
 }
 
