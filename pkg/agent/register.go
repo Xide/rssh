@@ -7,7 +7,8 @@ import (
 	"io/ioutil"
 	"net/http"
 	"path"
-	"strings"
+
+	"github.com/Xide/rssh/pkg/utils"
 
 	"github.com/Xide/rssh/pkg/api"
 	"github.com/rs/zerolog/log"
@@ -55,8 +56,7 @@ func registerRequest(url string) (*api.AgentCredentials, error) {
 
 // RegisterHost contact the API to retreive credentials for domain `req.Domain`
 func (a *Agent) RegisterHost(req *RegisterRequest) error {
-	rootDomain := strings.Join(strings.Split(req.Domain, ".")[1:], ".")
-	subDomain := strings.Split(req.Domain, ".")[0]
+	rootDomain, subDomain := utils.SplitDomainRequest(req.Domain)
 
 	log.Debug().
 		Str("root", rootDomain).

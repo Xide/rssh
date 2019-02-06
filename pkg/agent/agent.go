@@ -8,8 +8,9 @@ import (
 	"io/ioutil"
 	"net"
 	"path"
-	"strings"
 	"time"
+
+	"github.com/Xide/rssh/pkg/utils"
 
 	"github.com/rs/zerolog/log"
 	"golang.org/x/crypto/ssh"
@@ -175,7 +176,7 @@ func (a *Agent) Run() {
 		Int("hosts_count", len(a.hosts)).
 		Msg("Finished hosts import.")
 	for _, credential := range a.hosts {
-		root := strings.Join(strings.Split(credential.Domain, ".")[1:], ".")
+		_, root := utils.SplitDomainRequest(credential.Domain)
 		err := a.establishReverseForward(root, 2223, &credential)
 		if err != nil {
 			log.Warn().

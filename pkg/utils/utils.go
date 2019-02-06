@@ -42,3 +42,12 @@ func SplitParts(maybeParted []string) []string {
 	}
 	return r
 }
+
+// SplitDomainRequest split the fqdn at the first subdomain
+func SplitDomainRequest(fqdn string) (subDomain string, rootDomain string) {
+	domainSlice := strings.Split(fqdn, ".")
+
+	subDomain = domainSlice[0]
+	rootDomain = strings.Join(domainSlice[1:], ".")
+	return
+}
