@@ -46,6 +46,11 @@ func NewCommand(agent *agent.Agent) *cobra.Command {
 				Uint16("Port", flags.Port).
 				Msg("Register new endpoint")
 
+			if err := agent.Init(); err != nil {
+				log.Fatal().
+					Str("error", err.Error()).
+					Msg("Could not initialize RSSH agent.")
+			}
 			if err := agent.RegisterHost(&flags); err != nil {
 				log.Fatal().
 					Str("error", err.Error()).
