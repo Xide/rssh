@@ -32,6 +32,7 @@ the capitalized dot separated path of your variable in `.rssh.yml`.
 *API*:
 
 - Gatekeeper port allocation
+- HTTPS
 
 *Global*:
 
@@ -42,3 +43,4 @@ the capitalized dot separated path of your variable in `.rssh.yml`.
 - Multiple API's / Gatekeepers
 - Agent multi OS compatibility
 - bash / zsh completions
+- Etcd authentication
