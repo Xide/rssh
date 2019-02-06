@@ -41,3 +41,4 @@ the capitalized dot separated path of your variable in `.rssh.yml`.
 - CI/CD
 - Multiple API's / Gatekeepers
 - Agent multi OS compatibility
+- bash / zsh completions
