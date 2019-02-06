@@ -90,13 +90,5 @@ func NewCommand(agent *agent.Agent) *cobra.Command {
 	)
 	viper.BindPFlag("register.port", cmd.Flags().Lookup("port"))
 
-	cmd.Flags().Uint16Var(
-		&flags.APIPort,
-		"api-port",
-		9321,
-		"Port on which the HTTP API will listen on the root domain",
-	)
-	viper.BindPFlag("api.port", cmd.Flags().Lookup("api-port"))
-
 	return cmd
 }

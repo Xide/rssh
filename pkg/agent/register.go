@@ -21,8 +21,6 @@ type RegisterRequest struct {
 	Host string
 	// Port to dial for the "local" end of the connection
 	Port uint16
-	// Port on which the API listen to requests on the root domain
-	APIPort uint16
 }
 
 // registerRequest perform the http request, parse the result,
@@ -67,7 +65,7 @@ func (a *Agent) RegisterHost(req *RegisterRequest) error {
 	creds, err := registerRequest(fmt.Sprintf(
 		"http://%s:%d/register/%s",
 		rootDomain,
-		req.APIPort,
+		a.APIPort,
 		subDomain,
 	))
 	if err != nil {
