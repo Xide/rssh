@@ -4,7 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strconv"
+	"strings"
 
+	"github.com/Xide/rssh/pkg/gatekeeper"
 	"github.com/rs/zerolog/log"
 	"github.com/valyala/fasthttp"
 	"go.etcd.io/etcd/client"
@@ -46,8 +49,9 @@ func MValidateAuthenticationRequest(h fasthttp.RequestHandler, etcd client.KeysA
 			persistedCreds := AgentCredentials{}
 			err = json.Unmarshal([]byte(resp.Node.Value), &persistedCreds)
 			if err != nil {
-				fmt.Println(resp.Node.Value)
-				fmt.Println(err.Error())
+				log.Error().
+					Str("error", err.Error()).
+					Msg("Could not unmarshal credentials from etcd.")
 				failRequest(ctx, "Inconsistent state for domain", 500)
 			} else {
 				if persistedCreds.ID.String() == id {
@@ -57,6 +61,11 @@ func MValidateAuthenticationRequest(h fasthttp.RequestHandler, etcd client.KeysA
 						Msg("Authentication request validated")
 					h(ctx)
 				} else {
+					log.Debug().
+						Str("expected", persistedCreds.ID.String()).
+						Str("received", id).
+						Str("domain", domain).
+						Msg("Invalid agent ID.")
 					failRequest(ctx, "Invalid agent ID for this domain.", 403)
 				}
 			}
@@ -77,8 +86,78 @@ func MWithGatekeeperMeta(h fasthttp.RequestHandler, etcd client.KeysAPI) fasthtt
 				failRequest(ctx, "Backend consensus error", 500)
 			}
 		} else {
-			ctx.SetUserValue("gatekeeper", resp.Node.Value)
+			gk := resp.Node.Value
+			gMeta := &gatekeeper.Meta{}
+			err := json.Unmarshal([]byte(gk), gMeta)
+			if err != nil {
+				log.Warn().Str("error", err.Error()).Msg("Failed to serialize internal gatekeeper state.")
+				failRequest(ctx, "Failed to load Gatekeeper state.", 500)
+				return
+			}
+			ctx.SetUserValue("gatekeeper", gMeta)
 			h(ctx)
+		}
+	})
+}
+
+// MWithNewSlotFS allocate a slot in an available executor
+func MWithNewSlotFS(h fasthttp.RequestHandler, etcd client.KeysAPI) fasthttp.RequestHandler {
+	return fasthttp.RequestHandler(func(ctx *fasthttp.RequestCtx) {
+		log.Debug().Msg("Creating new gatekeeper slot.")
+		resp, err := etcd.Get(context.Background(), "/gatekeeper/slotfs", nil)
+		if err != nil && err.(client.Error).Code != client.ErrorCodeKeyNotFound {
+			failRequest(ctx, "Backend consensus error", 500)
+		} else {
+			gkMeta := ctx.UserValue("gatekeeper").(*gatekeeper.Meta)
+			if resp == nil || resp.Node == nil {
+				log.Debug().Msg("Gatekeeper is empty")
+				// Pick one slot at random
+				ctx.SetUserValue("slot", gkMeta.LowPort)
+			} else {
+				last := gkMeta.LowPort - 1
+				for _, e := range resp.Node.Nodes {
+					if e.Dir {
+						// Skipping the root directory /gatekeeper/slotfs/
+						continue
+					}
+					sl := strings.Split(e.Key, "/")
+					usedPort, err := strconv.ParseUint(sl[len(sl)-1], 10, 16)
+					if err != nil {
+						log.Error().Str("error", err.Error()).Msg("Failed to parse slotFS entry")
+						return
+					}
+					if uint16(usedPort) != last+1 {
+						log.Debug().
+							Uint("port", uint(last+1)).
+							Msg("Reusing liberated port.")
+						break
+					}
+					last++
+				}
+				if last >= gkMeta.HighPort {
+					log.Warn().
+						Msg("All gatekeeper slots already in use.")
+					failRequest(ctx, "All gatekeeper slots already in use.", 503)
+					return
+				}
+				ctx.SetUserValue("slot", last+1)
+			}
+
+			if _, err = etcd.Set(
+				context.Background(),
+				fmt.Sprintf("/gatekeeper/slotfs/%d", ctx.UserValue("slot")),
+				"{}",
+				nil,
+			); err != nil {
+				failRequest(ctx, "Backend consensus error", 500)
+			} else {
+				domain, _ := getDomain(ctx)
+				log.Info().
+					Uint("port", uint(ctx.UserValue("slot").(uint16))).
+					Str("domain", domain).
+					Msg("Allocated reverse SSH port.")
+				h(ctx)
+			}
 		}
 	})
 }

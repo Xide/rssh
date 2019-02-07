@@ -1,7 +1,6 @@
 package api
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 
@@ -19,9 +18,16 @@ type AuthRequest struct {
 	AgentID string
 }
 
-// AuthResponse describe the content of the authentication response
+// GkConnectInfos describe the content of the authentication response
+type GkConnectInfos struct {
+	GkMeta gatekeeper.Meta `json:"gk"`
+	Port   uint16          `json:"port"`
+}
+
+// AuthResponse describe the contents of the HTTP response
 type AuthResponse struct {
-	Port uint16 `json:"port"`
+	Infos *GkConnectInfos `json:"connection"`
+	Err   *Error       `json:"error"`
 }
 
 // Validate return an error if the agent id is invalid.
@@ -50,21 +56,18 @@ func (api *Dispatcher) authHandlerWrapped(ctx *fasthttp.RequestCtx) {
 		failRequest(ctx, err.Error(), 400)
 		return
 	}
-	log.Debug().
-		Str("token", string(token)).
-		Msg("Auth request parsed")
 
 	// Get Gatekeeper port
-	gk := ctx.UserValue("gatekeeper").(string)
-	gMeta := &gatekeeper.Meta{}
-	err := json.Unmarshal([]byte(gk), gMeta)
-	if err != nil {
-		log.Warn().Str("error", err.Error()).Msg("Failed to serialize internal gatekeeper state.")
-		failRequest(ctx, "Failed to load Gatekeeper state.", 500)
-		return
-	}
+	gMeta := ctx.UserValue("gatekeeper").(*gatekeeper.Meta)
 	// Create an available slot for the agent to connect to.
-	resp := AuthResponse{Port: gMeta.SSHPort}
+	// TODO: better method than random
+	resp := AuthResponse{
+		Infos: &GkConnectInfos{
+			Port:   ctx.UserValue("slot").(uint16),
+			GkMeta: *gMeta,
+		},
+		Err: nil,
+	}
 
 	respond(ctx, resp)
 	log.Info().
@@ -80,7 +83,10 @@ func (api *Dispatcher) AuthHandler(ctx *fasthttp.RequestCtx) {
 	MValidateDomain(
 		MValidateAuthenticationRequest(
 			MWithGatekeeperMeta(
-				api.authHandlerWrapped,
+				MWithNewSlotFS(
+					api.authHandlerWrapped,
+					*api.etcd,
+				),
 				*api.etcd,
 			),
 			*api.etcd,

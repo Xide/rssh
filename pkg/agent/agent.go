@@ -2,14 +2,18 @@ package agent
 
 import (
 	"crypto/rsa"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
 	"net"
+	"net/http"
 	"path"
+	"strings"
 	"time"
 
+	"github.com/Xide/rssh/pkg/api"
 	"github.com/Xide/rssh/pkg/utils"
 
 	"github.com/rs/zerolog/log"
@@ -101,7 +105,7 @@ func handleNewConnections(ch <-chan ssh.NewChannel, fwHost *ForwardedHost) {
 	}
 }
 
-func (a *Agent) establishReverseForward(host string, port uint16, fwHost *ForwardedHost) error {
+func (a *Agent) establishReverseForward(host string, port uint16, slot uint16, fwHost *ForwardedHost) error {
 	log.Debug().
 		Str("domain", fwHost.Domain).
 		Msg("Setup socket for agent.")
@@ -119,7 +123,7 @@ func (a *Agent) establishReverseForward(host string, port uint16, fwHost *Forwar
 		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
 	}
 
-	gkAddr := fmt.Sprintf("%s:%d", fwHost.Host, fwHost.Port)
+	gkAddr := fmt.Sprintf("%s:%d", host, port)
 	conn, err := net.Dial("tcp", gkAddr)
 	if err != nil {
 		return err
@@ -133,16 +137,14 @@ func (a *Agent) establishReverseForward(host string, port uint16, fwHost *Forwar
 		BindAddr string
 		BindPort uint32
 	}{
-		// TODO: Change hardcoded values
 		BindAddr: "127.0.0.1",
-		BindPort: 12346,
+		BindPort: uint32(slot),
 	}))
 	if err != nil {
 		return err
 	}
 	if c {
-		// TODO: Change hardcoded values
-		cn, err := net.Dial("tcp", "127.0.0.1:12346")
+		cn, err := net.Dial("tcp", fmt.Sprintf("%s:%d", host, uint32(slot)))
 		if err != nil {
 			sshConn.Close()
 			return err
@@ -156,6 +158,41 @@ func (a *Agent) establishReverseForward(host string, port uint16, fwHost *Forwar
 		return errors.New(string(data))
 	}
 	return nil
+}
+
+func (a *Agent) discoverGkPort(fwHost *ForwardedHost) (gkPort uint16, slot uint16, err error) {
+	subDomain, rootDomain := utils.SplitDomainRequest(fwHost.Domain)
+
+	resp, err := http.Post(
+		fmt.Sprintf("http://%s:%d/auth/%s?identity=%s", rootDomain, a.APIPort, subDomain, fwHost.UID),
+		"application/json",
+		strings.NewReader("{}"),
+	)
+	if err != nil {
+		return 0, 0, err
+	}
+	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return 0, 0, err
+	}
+
+	authResp := api.AuthResponse{}
+	err = json.Unmarshal(body, &authResp)
+	if err != nil {
+		return 0, 0, err
+	}
+	if authResp.Err != nil {
+		return 0, 0, errors.New(authResp.Err.Msg)
+	}
+	log.Debug().
+		Str("gk_infos", fmt.Sprintf("%v", authResp.Infos)).
+		Str("uid", fwHost.UID).
+		Str("domain", fwHost.Domain).
+		Msg("Authenticated.")
+	gkPort = authResp.Infos.GkMeta.SSHPort
+	slot = authResp.Infos.Port
+	return
 }
 
 // Init stup the identities and directories required by the agent.
@@ -177,7 +214,15 @@ func (a *Agent) Run() {
 		Msg("Finished hosts import.")
 	for _, credential := range a.hosts {
 		_, root := utils.SplitDomainRequest(credential.Domain)
-		err := a.establishReverseForward(root, 2223, &credential)
+		gkPort, slot, err := a.discoverGkPort(&credential)
+		if err != nil {
+			log.Warn().
+				Str("error", err.Error()).
+				Str("uid", credential.UID).
+				Msg("Failed to authenticate.")
+			continue
+		}
+		err = a.establishReverseForward(root, gkPort, slot, &credential)
 		if err != nil {
 			log.Warn().
 				Str("error", err.Error()).
