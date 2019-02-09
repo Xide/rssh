@@ -66,11 +66,9 @@ func parseRequestedDomain(s ssh.Session) (string, error) {
 	if len(s.Command()) > 0 {
 		destDomain := s.Command()[0]
 		return destDomain, nil
-	} else {
-		log.Debug().Msg("Unsupported connection request.")
-		return "", errors.New("proxy request without command")
 	}
-
+	log.Debug().Msg("Unsupported connection request.")
+	return "", errors.New("proxy request without command")
 }
 
 func (g *GateKeeper) proxyCommandHandler() func(ssh.Session) {
