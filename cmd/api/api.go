@@ -1,6 +1,9 @@
 package api
 
 import (
+	"errors"
+	"os"
+
 	"github.com/rs/zerolog/log"
 
 	"github.com/Xide/rssh/pkg/api"
@@ -16,16 +19,18 @@ type Flags struct {
 	EtcdEndpoints []string
 }
 
-func parseArgs(flags *Flags) {
+func parseArgs(flags *Flags) error {
 	// Shared resource not directly available through mapstructure
 	flags.EtcdEndpoints = utils.SplitParts(viper.GetStringSlice("etcd.endpoints"))
 
 	// Domain validation
 	if !utils.IsValidDomain(flags.RootDomain) {
-		log.Fatal().
+		log.Error().
 			Str("domain", flags.RootDomain).
 			Msg("Invalid domain name.")
+		return errors.New("invalid domain")
 	}
+	return nil
 }
 
 func NewCommand(flags *Flags) *cobra.Command {
@@ -33,8 +38,8 @@ func NewCommand(flags *Flags) *cobra.Command {
 		Use:   "api",
 		Short: "Run the RSSH public HTTP API.",
 		Long:  `Run the RSSH public HTTP API.`,
-		PreRun: func(cmd *cobra.Command, args []string) {
-			parseArgs(flags)
+		PreRunE: func(cmd *cobra.Command, args []string) error {
+			return parseArgs(flags)
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			httpAPI, err := api.NewDispatcher(
@@ -44,10 +49,15 @@ func NewCommand(flags *Flags) *cobra.Command {
 				flags.EtcdEndpoints,
 			)
 			if err != nil {
-				log.Fatal().Str("error", err.Error()).Msg("Failed to start HTTP API dispatcher")
-				return err
+				log.Error().Str("error", err.Error()).Msg("Failed to start HTTP API dispatcher")
+				os.Exit(1)
 			}
-			return httpAPI.Run()
+			err = httpAPI.Run()
+			if err != nil {
+				log.Error().Str("error", err.Error()).Msg("API server failed unexpectedly")
+				os.Exit(1)
+			}
+			return nil
 		},
 	}
 

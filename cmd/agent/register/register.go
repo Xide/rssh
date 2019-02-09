@@ -2,6 +2,7 @@ package register
 
 import (
 	"errors"
+	"os"
 	"strconv"
 
 	"github.com/Xide/rssh/pkg/agent"
@@ -47,17 +48,19 @@ func NewCommand(agent *agent.Agent) *cobra.Command {
 				Msg("Register new endpoint")
 
 			if err := agent.Init(); err != nil {
-				log.Fatal().
+				log.Error().
 					Str("error", err.Error()).
 					Msg("Could not initialize RSSH agent.")
+				os.Exit(1)
 			}
 			if err := agent.RegisterHost(&flags); err != nil {
-				log.Fatal().
+				log.Error().
 					Str("error", err.Error()).
 					Str("domain", flags.Domain).
 					Str("Host", flags.Host).
 					Uint16("Port", flags.Port).
 					Msg("Domain registration failed.")
+				os.Exit(1)
 			}
 			return nil
 		},

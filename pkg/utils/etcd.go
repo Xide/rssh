@@ -22,7 +22,7 @@ func GetEtcdKey(etcdEndpoints []string) (*client.KeysAPI, error) {
 	}
 	l.Msg("Connecting to etcd cluster.")
 	if err != nil {
-		l = log.Fatal()
+		l = log.Error()
 		l.Str("error", err.Error())
 		for i, e := range etcdEndpoints {
 			l.Str(fmt.Sprintf("endpoint-%d", i), e)
@@ -34,12 +34,13 @@ func GetEtcdKey(etcdEndpoints []string) (*client.KeysAPI, error) {
 
 	_, err = c.GetVersion(context.Background())
 	if err != nil {
-		l := log.Fatal()
+		l := log.Error()
 		l.Str("error", err.Error())
 		for i, e := range etcdEndpoints {
 			l.Str(fmt.Sprintf("endpoint-%d", i), e)
 		}
 		l.Msg("etcd healthcheck failed.")
+		return nil, err
 	}
 
 	log.Debug().Msg("etcd connection established.")

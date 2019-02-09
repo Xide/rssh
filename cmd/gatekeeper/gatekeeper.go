@@ -74,7 +74,7 @@ func NewCommand(flags *Flags) *cobra.Command {
 				Msg("Starting Gatekeeper")
 			g, err := gatekeeper.NewGateKeeper(flags.BindAddr, flags.BindPort)
 			if err != nil {
-				log.Fatal().
+				log.Error().
 					Str("error", err.Error()).
 					Msg("Could not start Gatekeeper")
 			}
