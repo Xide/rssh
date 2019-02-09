@@ -47,6 +47,9 @@ func (g *GateKeeper) WithEtcdE(etcdEndpoints []string) error {
 		return err
 	}
 	g.etcd = k
+	// Clear any potential remaining datas from previous gatekeepers
+	// WILL prevent multiple gatekeepers to run at the same time.
+	_, err = (*k).Delete(context.Background(), "/gatekeeper/slotfs", &client.DeleteOptions{Recursive: true})
 	return nil
 }
 
