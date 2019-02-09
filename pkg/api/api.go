@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"time"
 
 	"github.com/Xide/rssh/pkg/utils"
 	"github.com/buaazp/fasthttprouter"
@@ -65,6 +66,30 @@ func (api *Dispatcher) announce() error {
 	return nil
 }
 
+func (api *Dispatcher) HealthHandler(ctx *fasthttp.RequestCtx) {
+	payload, err := json.Marshal(struct {
+		Ok   bool   `json:"ok"`
+		Time string `json:"time"`
+	}{
+		true,
+		time.Now().String(),
+	})
+	if err != nil {
+		ctx.SetStatusCode(500)
+		log.Warn().
+			Str("error", err.Error()).
+			Msg("Failed to serialize healthcheck infos.")
+	} else {
+		ctx.SetStatusCode(200)
+		_, err = ctx.Write(payload)
+		if err != nil {
+			log.Warn().
+				Str("error", err.Error()).
+				Msg("Failed to respond to healthcheck.")
+		}
+	}
+}
+
 // Run is the entry point of the dispatcher.
 // it does the following:
 // - Connect to etcd
@@ -83,6 +108,7 @@ func (api *Dispatcher) Run() error {
 	}
 	router := fasthttprouter.New()
 
+	router.GET("/health", api.HealthHandler)
 	router.POST("/auth/:domain", api.AuthHandler)
 	router.POST("/register/:domain", MValidateDomain(api.RegisterHandler))
 
