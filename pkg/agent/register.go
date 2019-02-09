@@ -56,7 +56,7 @@ func registerRequest(url string) (*api.AgentCredentials, error) {
 
 // RegisterHost contact the API to retreive credentials for domain `req.Domain`
 func (a *Agent) RegisterHost(req *RegisterRequest) error {
-	rootDomain, subDomain := utils.SplitDomainRequest(req.Domain)
+	subDomain, rootDomain := utils.SplitDomainRequest(req.Domain)
 
 	log.Debug().
 		Str("root", rootDomain).
