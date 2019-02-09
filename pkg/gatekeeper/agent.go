@@ -48,7 +48,7 @@ func (g *GateKeeper) setSlot(slot *AgentSlot, key string) error {
 	return nil
 }
 
-func (g *GateKeeper) getSlotForPort(port uint16) (*AgentSlot, error) {
+func (g *GateKeeper) getFirstSlotForFn(fn func(*AgentSlot) bool) (*AgentSlot, error) {
 	slots, err := g.getSlotFS()
 	if err != nil {
 		return nil, err
@@ -58,15 +58,20 @@ func (g *GateKeeper) getSlotForPort(port uint16) (*AgentSlot, error) {
 		if err != nil {
 			log.Warn().
 				Str("error", err.Error()).
-				Uint32("port", uint32(port)).
 				Msg("Unable to deserialize slot from etcd.")
 			continue
 		}
-		if uint16(port) == uint16(slot.Port) {
+		if fn(slot) {
 			return slot, nil
 		}
 	}
-	return nil, fmt.Errorf("no such slot %d in the gatekeeper slotFS", port)
+	return nil, fmt.Errorf("getFirstSlotForFn: nothing matched in slotFS")
+}
+
+func (g *GateKeeper) getSlotForPort(port uint16) (*AgentSlot, error) {
+	return g.getFirstSlotForFn(func(sl *AgentSlot) bool {
+		return uint16(port) == sl.Port
+	})
 }
 
 func (g *GateKeeper) setSlotForPort(slot *AgentSlot, port uint16) error {
