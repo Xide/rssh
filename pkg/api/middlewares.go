@@ -143,10 +143,19 @@ func MWithNewSlotFS(h fasthttp.RequestHandler, etcd client.KeysAPI) fasthttp.Req
 				ctx.SetUserValue("slot", last+1)
 			}
 
+			domain, _ := getDomain(ctx)
+			identity, _ := getIdentity(ctx)
+			payload, err := json.Marshal(gatekeeper.AgentSlot{
+				Port:        ctx.UserValue("slot").(uint16),
+				Domain:      domain,
+				AgentID:     identity,
+				Established: false,
+			})
+
 			if _, err = etcd.Set(
 				context.Background(),
 				fmt.Sprintf("/gatekeeper/slotfs/%d", ctx.UserValue("slot")),
-				"{}",
+				string(payload),
 				nil,
 			); err != nil {
 				failRequest(ctx, "Backend consensus error", 500)
