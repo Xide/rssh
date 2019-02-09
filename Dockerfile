@@ -1,5 +1,5 @@
 # Builder stage
-FROM golang:1.11-alpine AS builder
+FROM golang:1.11-alpine AS deps_dl
 
 RUN apk add --no-cache git
 
@@ -7,6 +7,8 @@ WORKDIR /rssh
 
 COPY go.mod go.sum ./
 RUN go mod download
+
+FROM deps_dl as builder
 
 COPY . ./
 
