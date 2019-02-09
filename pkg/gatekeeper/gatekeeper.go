@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"strings"
 
 	"go.etcd.io/etcd/client"
 
@@ -102,15 +101,30 @@ func NewGateKeeper(addr string, port uint16) (*GateKeeper, error) {
 // collectClosedSession removes from the runtime a connection that has been
 // closed by the agent.
 func (g *GateKeeper) collectClosedSession(ctx ssh.Context, slot *AgentSlot) {
-	<-ctx.Done()
-	for x := 0; x < len(g.clients); x++ {
-		if strings.Compare(slot.Domain, g.clients[x].Domain) == 0 {
-			g.clients = append(g.clients[:x], g.clients[x+1:]...)
-			log.Debug().Str("domain", slot.Domain).Msg("Closed agent connection")
-			return
-		}
+	payload, err := json.Marshal(slot)
+	if err != nil {
+		log.Warn().
+			Str("error", err.Error()).
+			Msg("Failed to marshal slot for etcd garbage collection.")
+		return
 	}
-	log.Warn().Str("domain", slot.Domain).Msg("Could not find slot for garbage collection.")
+	<-ctx.Done()
+
+	if _, err := (*g.etcd).Delete(
+		context.Background(),
+		fmt.Sprintf("/gatekeeper/slotfs/%d", slot.Port),
+		&client.DeleteOptions{
+			PrevValue: string(payload),
+		},
+	); err != nil {
+		log.Warn().
+			Str("error", err.Error()).
+			Str("domain", slot.Domain).
+			Msg("Could not find slot for garbage collection.")
+	} else {
+		log.Debug().Str("domain", slot.Domain).Msg("Closed agent connection")
+
+	}
 }
 
 // initSSHServer creates a new SSH server with
@@ -122,8 +136,8 @@ func (g *GateKeeper) initSSHServer() error {
 	}
 	addr := fmt.Sprintf("%s:%d", g.Meta.SSHAddr, g.Meta.SSHPort)
 	server := ssh.Server{
-		Addr:                          addr,
-		Handler:                       ssh.Handler(g.proxyCommandHandler()),
+		Addr:    addr,
+		Handler: ssh.Handler(g.proxyCommandHandler()),
 		ReversePortForwardingCallback: ssh.ReversePortForwardingCallback(g.reversePortForwardHandler(*g.etcd)),
 	}
 	g.srv = &server
