@@ -5,9 +5,8 @@ services:
     image: quay.io/coreos/etcd
     environment:
       ETCD_LISTEN_CLIENT_URLS: 'http://0.0.0.0:2379'
-      ETCD_ADVERTISE_CLIENT_URLS: 'http://etcd:2379'
-    ports:
-      - 2379:2379
+      ETCD_ADVERTISE_CLIENT_URLS: 'http://127.0.0.1:2379'
+    network_mode: host
     restart: on-failure
   rssh_api:
     build:
@@ -16,18 +15,16 @@ services:
     image: xide/rssh
     environment:
       RSSH_CONFIG: /.rssh.yml
-      RSSH_DOMAIN: 'rssh.local'
       RSSH_LOG_LEVEL: 'debug'
       RSSH_API_ADDR: '0.0.0.0'
-      RSSH_API_PORT: '2222'
-      RSSH_API_ETCD_ENDPOINTS: 'http://etcd:2379'
+      RSSH_API_PORT: '9321'
+      RSSH_API_ETCD_ENDPOINTS: 'http://127.0.0.1:2379'
     command: api
-    # volumes:
-    #   - .rssh.yml:/.rssh.yml
+    volumes:
+      - .rssh.yml:/.rssh.yml
     depends_on:
       - etcd
-    ports:
-      - 2222:2222
+    network_mode: host
   rssh_gatekeeper:
     build:
       context: .
@@ -35,17 +32,14 @@ services:
     image: xide/rssh
     environment:
       RSSH_CONFIG: /.rssh.yml
-      RSSH_DOMAIN: 'rssh.local'
       RSSH_LOG_LEVEL: 'debug'
       RSSH_GATEKEEPER_ADDR: '0.0.0.0'
-      RSSH_GATEKEEPER_PORT: '9321'
+      RSSH_GATEKEEPER_PORT: '2223'
       RSSH_GATEKEEPER_PORT_RANGE: '31240-65535'
-      RSSH_GATEKEEPER_ETCD_ENDPOINTS: 'http://etcd:2379'
+      RSSH_GATEKEEPER_ETCD_ENDPOINTS: 'http://127.0.0.1:2379'
     command: gatekeeper
-    # volumes:
-    #   - .rssh.yml:/.rssh.yml
+    volumes:
+      - .rssh.yml:/.rssh.yml
     depends_on:
       - etcd
-    ports:
-      - 9321:9321
-
+    network_mode: host
