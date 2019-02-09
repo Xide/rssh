@@ -148,6 +148,11 @@ func (g *GateKeeper) initSSHServer() error {
 		Str("addr", g.Meta.SSHAddr).
 		Uint16("port", g.Meta.SSHPort).
 		Msg("starting SSH server")
-	// go g.monitorSlots()
-	return server.ListenAndServe()
+	err := server.ListenAndServe()
+	if err != nil {
+		log.Error().
+			Str("error", err.Error()).
+			Msg("SSH server exited unexpectedly.")
+	}
+	return err
 }
