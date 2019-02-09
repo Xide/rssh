@@ -27,11 +27,8 @@ the capitalized dot separated path of your variable in `.rssh.yml`.
 
 *Gatekeeper*:
 
-- Port authorization
-
 *API*:
 
-- Gatekeeper port allocation
 - HTTPS
 
 *Global*:
