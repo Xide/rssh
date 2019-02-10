@@ -4,7 +4,7 @@ services:
   etcd:
     image: quay.io/coreos/etcd
     environment:
-      ETCD_LISTEN_CLIENT_URLS: 'http://0.0.0.0:2379'
+      ETCD_LISTEN_CLIENT_URLS: 'http://127.0.0.1:2379'
       ETCD_ADVERTISE_CLIENT_URLS: 'http://127.0.0.1:2379'
     network_mode: host
     restart: on-failure
