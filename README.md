@@ -1,6 +1,54 @@
 # RSSH
 
-Reverse SSH gateway.
+Reverse SSH gateway. SSH into any host in a private network by installing an agent
+that will maintain a reverse SSH session on a public server.
+
+![diagram](./docs/diagram.png)
+
+## Quickstart
+
+0. Start the RSSH API & Gatekeeper
+
+```sh
+git clone https://github.com/Xide/rssh.git
+cd rssh
+docker-compose up --build
+```
+
+1. Register your subdomain
+```sh
+go build
+
+# baguette.localhost is the default specified in `.rssh.yml`
+# It will register 127.0.0.1:22 by default. If
+# you wish to expose another host, you can use
+# the `--host` and `--port` arguments
+./rssh agent register -d subdomain.baguette.localhost
+
+>> 2019-02-10T03:39:43+01:00 INF Register new endpoint Host=127.0.0.1 Port=22 domain=subdomain.baguette.localhost
+>> 2019-02-10T03:39:43+01:00 INF Persisted credentials to disk. domain=subdomain.baguette.localhost
+
+# Start to expose all the registered domains so far
+./rssh agent
+
+>> 2019-02-10T03:48:11+01:00 INF Starting RSSH agent. root-dir=/home/billy/.rssh
+2019-02-10T03:48:11+01:00 INF Finished hosts import. hosts_count=1
+>> 2019-02-10T03:48:11+01:00 INF Established forwarding. domain=subdomain.baguette.localhost host=127.0.0.1 port=22
+
+```
+
+2. Connect through RSSH
+```sh
+cat >> ~/.ssh/config << EOF
+Host *.baguette.localhost
+    ProxyCommand ssh -p 2223 127.0.0.1 %h
+    StrictHostKeyChecking no
+    UserKnownHostsFile=/dev/null
+
+EOF
+
+ssh subdomain.baguette.localhost
+```
 
 ## Configuration
 
@@ -17,27 +65,27 @@ the capitalized dot separated path of your variable in `.rssh.yml`.
 
 *Agent*:
 
-- Reconnect on hangup
-- Runtime config synchronization
-- Proper resources garbage collection
-- New commands:
-    - list identities
-    - remove identities
-- daemon
+- [x] ~~Reconnect on hangup~~
+- [x] ~~Runtime config synchronization~~
+- [x] ~~Proper resources garbage collection~~
+- [ ] New commands:
+    - [ ] list identities
+    - [ ] remove identities
+- [ ] daemon
 
 *Gatekeeper*:
 
 *API*:
 
-- HTTPS
+- [ ] HTTPS
 
 *Global*:
 
-- More logging
-- Proper README
-- Guides
-- CI/CD
-- Multiple API's / Gatekeepers
-- Agent multi OS compatibility
-- bash / zsh completions
-- Etcd authentication
+- [ ] More logging
+- [x] ~~Proper README~~
+- [ ] Guides
+- [ ] CI/CD
+- [ ] Multiple API's / Gatekeepers
+- [ ] Agent multi OS compatibility
+- [ ] bash / zsh completions
+- [ ] Etcd authentication
