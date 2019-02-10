@@ -1,7 +1,6 @@
 package api
 
 import (
-	"errors"
 	"os"
 
 	"github.com/rs/zerolog/log"
@@ -28,7 +27,7 @@ func parseArgs(flags *Flags) error {
 		log.Error().
 			Str("domain", flags.RootDomain).
 			Msg("Invalid domain name.")
-		return errors.New("invalid domain")
+		os.Exit(1)
 	}
 	return nil
 }
