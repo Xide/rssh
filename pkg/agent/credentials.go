@@ -44,13 +44,18 @@ func (a *Agent) synchronizeIdentities() error {
 				Msg("Could not load identity")
 			continue
 		}
+		for _, x := range a.hosts {
+			if fw.UID == x.UID {
+				continue
+			}
+		}
 		hosts = append(hosts, *fw)
 		log.Debug().
 			Str("identity", fw.UID).
 			Str("file", idFile).
 			Msg("Identity imported.")
 	}
-	a.hosts = hosts
+	a.hosts = append(a.hosts, hosts...)
 	return nil
 }
 
