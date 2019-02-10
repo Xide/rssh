@@ -120,9 +120,6 @@ func (a *Agent) handleNewConnections(ch <-chan ssh.NewChannel, fwHost *Forwarded
 }
 
 func (a *Agent) establishReverseForward(host string, port uint16, slot uint16, fwHost *ForwardedHost) error {
-	log.Debug().
-		Str("domain", fwHost.Domain).
-		Msg("Setup socket for agent.")
 	pubKeyFile := path.Join(
 		a.RootDirectory,
 		"identities",
@@ -164,6 +161,11 @@ func (a *Agent) establishReverseForward(host string, port uint16, slot uint16, f
 			return err
 		}
 		cn.Close()
+		log.Info().
+			Str("domain", fwHost.Domain).
+			Str("host", fwHost.Host).
+			Uint16("port", fwHost.Port).
+			Msg("Established forwarding.")
 		a.actives = append(a.actives, *fwHost)
 		go a.handleNewConnections(ch, fwHost)
 	} else {
