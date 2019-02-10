@@ -44,10 +44,8 @@ func (a *Agent) synchronizeIdentities() error {
 				Msg("Could not load identity")
 			continue
 		}
-		for _, x := range a.hosts {
-			if fw.UID == x.UID {
-				continue
-			}
+		if a.isImported(fw) {
+			continue
 		}
 		hosts = append(hosts, *fw)
 		log.Debug().
@@ -57,6 +55,15 @@ func (a *Agent) synchronizeIdentities() error {
 	}
 	a.hosts = append(a.hosts, hosts...)
 	return nil
+}
+
+func (a *Agent) isImported(fwHost *ForwardedHost) bool {
+	for _, x := range a.hosts {
+		if fwHost.UID == x.UID {
+			return true
+		}
+	}
+	return false
 }
 
 func filterPublicKeys(path string) ([]string, error) {
