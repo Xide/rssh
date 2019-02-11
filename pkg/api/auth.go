@@ -27,7 +27,7 @@ type GkConnectInfos struct {
 // AuthResponse describe the contents of the HTTP response
 type AuthResponse struct {
 	Infos *GkConnectInfos `json:"connection"`
-	Err   *Error       `json:"error"`
+	Err   *Error          `json:"error"`
 }
 
 // Validate return an error if the agent id is invalid.

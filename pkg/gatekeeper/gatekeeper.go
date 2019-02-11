@@ -152,8 +152,8 @@ func (g *GateKeeper) initSSHServer() error {
 	}
 	addr := fmt.Sprintf("%s:%d", g.Meta.SSHAddr, g.Meta.SSHPort)
 	server := ssh.Server{
-		Addr:    addr,
-		Handler: ssh.Handler(g.proxyCommandHandler()),
+		Addr:                          addr,
+		Handler:                       ssh.Handler(g.proxyCommandHandler()),
 		ReversePortForwardingCallback: ssh.ReversePortForwardingCallback(g.reversePortForwardHandler(*g.etcd)),
 	}
 	g.srv = &server
