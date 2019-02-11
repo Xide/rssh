@@ -11,6 +11,8 @@ import (
 	"github.com/spf13/viper"
 )
 
+// Flags are injected by parent command
+// from the cli > env > config file > defaults
 type Flags struct {
 	BindAddr      string `mapstructure:"addr"`
 	BindPort      uint16 `mapstructure:"port"`
@@ -32,6 +34,8 @@ func parseArgs(flags *Flags) error {
 	return nil
 }
 
+// NewCommand is the API CLI entrypoint
+// it will block upon returned command Run()
 func NewCommand(flags *Flags) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "api",

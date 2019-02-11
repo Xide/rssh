@@ -5,8 +5,10 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// Version is super useless at the moment
 const Version = "0.0.1"
 
+// NewCommand Run() will log the version above and exit.
 func NewCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "version",

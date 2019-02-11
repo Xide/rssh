@@ -14,6 +14,8 @@ import (
 	"github.com/spf13/viper"
 )
 
+// Flags are injected by parent command
+// from the cli > env > config file > defaults
 type Flags struct {
 	BindAddr      string `mapstructure:"ssh_addr"`
 	BindPort      uint16 `mapstructure:"ssh_port"`
@@ -59,6 +61,8 @@ func parseArgsE(flags *Flags) error {
 	return nil
 }
 
+// NewCommand is the Gatekeeper CLI entrypoint
+// it will block upon returned command Run()
 func NewCommand(flags *Flags) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "gatekeeper",

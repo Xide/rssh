@@ -8,6 +8,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// Flags are inherited from agent command
 type Flags = agent.Agent
 
 func parseArgsE(flags *Flags) error {

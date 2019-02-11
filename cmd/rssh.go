@@ -23,6 +23,9 @@ import (
 
 const defaultLevel = zerolog.InfoLevel
 
+// Flags is the root configuration structure.
+// It is filled by the `utils.InitConfig` helper
+// in this order : cli > env > config file > defaults
 type Flags struct {
 	LogLevel        string `mapstructure:"log_level"`
 	ConfigFile      string
@@ -90,6 +93,9 @@ func setupLogLevel(flags *Flags) error {
 	return nil
 }
 
+// NewCommand is the RSSH command line entry point.
+// It setup configuration, logging and defer the execution
+// to the corresponding child command
 func NewCommand(flags *Flags) *cobra.Command {
 	cobra.OnInitialize(func() {
 		utils.InitConfig(flags)
@@ -129,6 +135,7 @@ func NewCommand(flags *Flags) *cobra.Command {
 	return cmd
 }
 
+// Execute is the module entry point
 func Execute() {
 	configToEnv := strings.NewReplacer(".", "_")
 	viper.SetEnvKeyReplacer(configToEnv)
