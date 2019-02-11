@@ -1,12 +1,14 @@
 package rssh
 
 import (
+	"fmt"
 	"os"
 	"strings"
 	"time"
 
 	"github.com/Xide/rssh/pkg/utils"
 
+	"github.com/fatih/color"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
@@ -52,6 +54,24 @@ func parseLogLevel(strLevel string) zerolog.Level {
 func setupLogLevel(flags *Flags) error {
 	raw := viper.GetString("log_level")
 	ll := parseLogLevel(raw)
+	log.Logger = log.Output(zerolog.ConsoleWriter{
+		Out: os.Stderr,
+		FormatLevel: func(i interface{}) string {
+			switch i.(string) {
+			case "debug":
+				return color.New(color.BgHiBlack).SprintFunc()("|   🔎   |")
+			case "info":
+				return color.New(color.BgBlue).SprintFunc()("|   🔹   |")
+			case "warn":
+				return color.New(color.BgYellow).SprintFunc()("|   ⚠️   |")
+			case "error":
+				return color.New(color.BgRed).SprintFunc()("|   ❌   |")
+			default:
+
+				return strings.ToUpper(fmt.Sprintf("| %-6s|", i))
+			}
+		},
+	})
 	zerolog.SetGlobalLevel(ll)
 	log.Debug().Str("loglevel", raw).Msg("Initialized logging.")
 	return nil

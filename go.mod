@@ -6,6 +6,7 @@ require (
 	github.com/buaazp/fasthttprouter v0.1.1
 	github.com/coreos/etcd v3.3.10+incompatible // indirect
 	github.com/coreos/go-etcd v2.0.0+incompatible // indirect
+	github.com/fatih/color v1.7.0
 	github.com/gliderlabs/ssh v0.1.2-0.20190107192228-bed87f398c0b
 	github.com/mitchellh/mapstructure v1.1.2 // indirect
 	github.com/rs/zerolog v1.11.0
