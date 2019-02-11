@@ -68,9 +68,9 @@ the capitalized dot separated path of your variable in `.rssh.yml`.
 - [x] ~~Reconnect on hangup~~
 - [x] ~~Runtime config synchronization~~
 - [x] ~~Proper resources garbage collection~~
-- [ ] New commands:
-    - [ ] list identities
-    - [ ] remove identities
+- [x] ~~New commands~~ :
+    - [x] ~~list identities~~
+    - [x] ~~remove identities~~
 - [ ] daemon
 
 *Gatekeeper*:
