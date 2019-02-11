@@ -31,7 +31,7 @@ go build
 ./rssh agent ls
 
 >> |-----------------------------------------------------------------------------|
->> | Domain                               | UID                                  | 
+>> | Domain                               | UID                                  |
 >> |-----------------------------------------------------------------------------|
 >> | subdomain.baguette.localhost         | a6ea341f-9b6d-413f-82be-da0ba214c831 |
 >> |-----------------------------------------------------------------------------|
@@ -96,6 +96,8 @@ the capitalized dot separated path of your variable in `.rssh.yml`.
 - [ ] daemon
 
 *Gatekeeper*:
+
+- [ ] HostsKey file
 
 *API*:
 
