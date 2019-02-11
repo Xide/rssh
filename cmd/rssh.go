@@ -52,27 +52,40 @@ func parseLogLevel(strLevel string) zerolog.Level {
 }
 
 func setupLogLevel(flags *Flags) error {
+	var fmtLevel func(interface{}) string
+
 	raw := viper.GetString("log_level")
 	ll := parseLogLevel(raw)
-	log.Logger = log.Output(zerolog.ConsoleWriter{
-		Out: os.Stderr,
-		FormatLevel: func(i interface{}) string {
+	isTerminal := terminal.IsTerminal(int(os.Stdout.Fd()))
+	if isTerminal {
+		fmtLevel = func(i interface{}) string {
 			switch i.(string) {
 			case "debug":
-				return color.New(color.BgHiBlack).SprintFunc()("|   🔎   |")
+				return color.New(color.FgHiBlack).SprintFunc()("●")
 			case "info":
-				return color.New(color.BgBlue).SprintFunc()("|   🔹   |")
+				return color.New(color.FgBlue).SprintFunc()("●")
 			case "warn":
-				return color.New(color.BgYellow).SprintFunc()("|   ⚠️   |")
+				return color.New(color.FgYellow).SprintFunc()("●")
 			case "error":
-				return color.New(color.BgRed).SprintFunc()("|   ❌   |")
+				return color.New(color.FgRed).SprintFunc()("●")
+			case "fatal":
+				return color.New(color.FgRed).SprintFunc()("●")
+			case "panic":
+				return color.New(color.FgRed).SprintFunc()("●")
 			default:
-
 				return strings.ToUpper(fmt.Sprintf("| %-6s|", i))
 			}
-		},
+		}
+	}
+
+	log.Logger = log.Output(zerolog.ConsoleWriter{
+		Out:         os.Stdout,
+		TimeFormat:  time.RFC3339,
+		NoColor:     !isTerminal,
+		FormatLevel: fmtLevel,
 	})
 	zerolog.SetGlobalLevel(ll)
+
 	log.Debug().Str("loglevel", raw).Msg("Initialized logging.")
 	return nil
 }
@@ -117,11 +130,6 @@ func NewCommand(flags *Flags) *cobra.Command {
 }
 
 func Execute() {
-	log.Logger = log.Output(zerolog.ConsoleWriter{
-		Out:        os.Stdout,
-		TimeFormat: time.RFC3339,
-		NoColor:    !terminal.IsTerminal(int(os.Stdout.Fd())),
-	})
 	configToEnv := strings.NewReplacer(".", "_")
 	viper.SetEnvKeyReplacer(configToEnv)
 	viper.SetEnvPrefix("rssh")
