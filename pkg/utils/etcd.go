@@ -9,6 +9,9 @@ import (
 	"go.etcd.io/etcd/client"
 )
 
+// WithFixedIntervalRetry calls the function `fn` `retry` times,
+// waiting for the duration indicated by the `wait` parameter between
+// two calls.
 func WithFixedIntervalRetry(fn func() error, retry uint, wait time.Duration) error {
 	var err error
 	var x uint
@@ -22,6 +25,8 @@ func WithFixedIntervalRetry(fn func() error, retry uint, wait time.Duration) err
 	return err
 }
 
+// GetEtcdKey configure an etcd client, connects, check the health
+// of the quorum and return the object used to interact with it.
 func GetEtcdKey(etcdEndpoints []string) (*client.KeysAPI, error) {
 	cfg := client.Config{
 		Endpoints:               etcdEndpoints,

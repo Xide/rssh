@@ -5,6 +5,7 @@ import (
 	"strings"
 )
 
+// Min ...
 func Min(x, y uint16) uint16 {
 	if x < y {
 		return x
@@ -12,6 +13,7 @@ func Min(x, y uint16) uint16 {
 	return y
 }
 
+// Max ...
 func Max(x, y uint16) uint16 {
 	if x > y {
 		return x
