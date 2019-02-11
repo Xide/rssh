@@ -9,7 +9,7 @@ import (
 )
 
 // InitConfig searches the filesystem for a configuration file,
-// loads it and unmarshal it in the variable refered to by `flags` argument
+// loads it and unmarshal it in the variable referred to by `flags` argument
 // It search for the configuration file in this order:
 // - The `config` cli / environment variable location
 // - Current directory
