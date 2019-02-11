@@ -81,8 +81,11 @@ func filterPublicKeys(path string) ([]string, error) {
 	return res, nil
 }
 
+// RemoveIdentity takes an unique forward identifier
+// (domain or uid), and removes the corresponding
+// entry from the filesystem and the agent memory
 func (a *Agent) RemoveIdentity(uid string) error {
-	for _, x := range a.hosts {
+	for i, x := range a.hosts {
 		if uid == x.UID || uid == x.Domain {
 			path := path.Join(
 				a.RootDirectory,
@@ -93,6 +96,7 @@ func (a *Agent) RemoveIdentity(uid string) error {
 			if err != nil {
 				return err
 			}
+			a.hosts = append(a.hosts[:i], a.hosts[i+1:]...)
 			return nil
 		}
 	}
