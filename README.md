@@ -28,14 +28,23 @@ go build
 >> 2019-02-10T03:39:43+01:00 INF Register new endpoint Host=127.0.0.1 Port=22 domain=subdomain.baguette.localhost
 >> 2019-02-10T03:39:43+01:00 INF Persisted credentials to disk. domain=subdomain.baguette.localhost
 
+./rssh agent ls
+
+>> |-----------------------------------------------------------------------------|
+>> | Domain                               | UID                                  | 
+>> |-----------------------------------------------------------------------------|
+>> | subdomain.baguette.localhost         | a6ea341f-9b6d-413f-82be-da0ba214c831 |
+>> |-----------------------------------------------------------------------------|
+
 # Start to expose all the registered domains so far
+
 ./rssh agent
 
 >> 2019-02-10T03:48:11+01:00 INF Starting RSSH agent. root-dir=/home/billy/.rssh
 2019-02-10T03:48:11+01:00 INF Finished hosts import. hosts_count=1
 >> 2019-02-10T03:48:11+01:00 INF Established forwarding. domain=subdomain.baguette.localhost host=127.0.0.1 port=22
-
 ```
+
 
 2. Connect through RSSH
 ```sh
@@ -48,6 +57,19 @@ Host *.baguette.localhost
 EOF
 
 ssh subdomain.baguette.localhost
+```
+
+
+3. Cleanup
+```sh
+
+# Remove subdomain identity from agent known hosts
+./rssh agent rm subdomain.baguette.localhost
+
+>> 2019-02-11T15:56:31+01:00 INF Identity removed
+
+# Two down to force volumes deletion
+docker-compose down; docker-compose down;
 ```
 
 ## Configuration
