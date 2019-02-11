@@ -220,6 +220,7 @@ func (a *Agent) Init() error {
 	if err := a.synchronizeIdentities(); err != nil {
 		return err
 	}
+	log.Debug().Msg("Agent initialized")
 	return nil
 }
 

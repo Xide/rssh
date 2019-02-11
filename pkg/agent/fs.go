@@ -55,10 +55,7 @@ func (a *Agent) ensureRSSHDirectories() error {
 	if err := ensureDirectory(a.RootDirectory, 0744); err != nil {
 		return err
 	}
-	if err := ensureDirectory(path.Join(a.RootDirectory, "identities"), 0700); err != nil {
-		return err
-	}
-	return nil
+	return ensureDirectory(path.Join(a.RootDirectory, "identities"), 0700)
 }
 
 func (a *Agent) setupFileSystem() error {

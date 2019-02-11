@@ -66,6 +66,10 @@ func (api *Dispatcher) announce() error {
 	return nil
 }
 
+// HealthHandler will respond to GET /health request in order for
+// clients / agents / orchestrators to know if this service can
+// handle traffic.
+// TODO: check for ETCD connectivity
 func (api *Dispatcher) HealthHandler(ctx *fasthttp.RequestCtx) {
 	payload, err := json.Marshal(struct {
 		Ok   bool   `json:"ok"`
