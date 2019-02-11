@@ -2,6 +2,7 @@ package gatekeeper
 
 import (
 	"errors"
+	"os"
 	"strconv"
 	"strings"
 
@@ -78,7 +79,14 @@ func NewCommand(flags *Flags) *cobra.Command {
 					Str("error", err.Error()).
 					Msg("Could not start Gatekeeper")
 			}
-			g.WithEtcdE(flags.EtcdEndpoints)
+
+			if err := g.WithEtcdE(flags.EtcdEndpoints); err != nil {
+				log.Error().
+					Str("error", err.Error()).
+					Msg("Etcd unreachable")
+				os.Exit(1)
+			}
+
 			return g.Run()
 		},
 	}
