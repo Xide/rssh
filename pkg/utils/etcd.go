@@ -9,6 +9,19 @@ import (
 	"go.etcd.io/etcd/client"
 )
 
+func WithFixedIntervalRetry(fn func() error, retry uint, wait time.Duration) error {
+	var err error
+	var x uint
+	for x = 0; x < retry; x++ {
+		if err = fn(); err != nil {
+			time.Sleep(wait)
+		} else {
+			return nil
+		}
+	}
+	return err
+}
+
 func GetEtcdKey(etcdEndpoints []string) (*client.KeysAPI, error) {
 	cfg := client.Config{
 		Endpoints:               etcdEndpoints,
@@ -22,7 +35,7 @@ func GetEtcdKey(etcdEndpoints []string) (*client.KeysAPI, error) {
 	}
 	l.Msg("Connecting to etcd cluster.")
 	if err != nil {
-		l = log.Error()
+		l = log.Warn()
 		l.Str("error", err.Error())
 		for i, e := range etcdEndpoints {
 			l.Str(fmt.Sprintf("endpoint-%d", i), e)
@@ -34,7 +47,7 @@ func GetEtcdKey(etcdEndpoints []string) (*client.KeysAPI, error) {
 
 	_, err = c.GetVersion(context.Background())
 	if err != nil {
-		l := log.Error()
+		l := log.Warn()
 		l.Str("error", err.Error())
 		for i, e := range etcdEndpoints {
 			l.Str(fmt.Sprintf("endpoint-%d", i), e)

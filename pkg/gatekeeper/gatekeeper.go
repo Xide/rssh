@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"time"
 
 	"go.etcd.io/etcd/client"
 
@@ -42,14 +43,26 @@ type GateKeeper struct {
 // WithEtcdE instanciate an etcd client and connect to the cluster.
 // the resulting api keys are persisted in the GateKeeper.
 func (g *GateKeeper) WithEtcdE(etcdEndpoints []string) error {
-	k, err := utils.GetEtcdKey(etcdEndpoints)
-	if err != nil {
+	var k *client.KeysAPI
+	if err := utils.WithFixedIntervalRetry(
+		func() error {
+			var err error
+			k, err = utils.GetEtcdKey(etcdEndpoints)
+			return err
+		},
+		5,
+		5*time.Second,
+	); err != nil {
 		return err
 	}
+
 	g.etcd = k
 	// Clear any potential remaining datas from previous gatekeepers
 	// WILL prevent multiple gatekeepers to run at the same time.
-	_, err = (*k).Delete(context.Background(), "/gatekeeper/slotfs", &client.DeleteOptions{Recursive: true})
+	_, err := (*k).Delete(context.Background(), "/gatekeeper/slotfs", &client.DeleteOptions{Recursive: true})
+	if err.(client.Error).Code != client.ErrorCodeKeyNotFound {
+		return err
+	}
 	return nil
 }
 

@@ -97,12 +97,21 @@ func (api *Dispatcher) HealthHandler(ctx *fasthttp.RequestCtx) {
 // - Listen and serve requests
 func (api *Dispatcher) Run() error {
 
-	kapi, err := utils.GetEtcdKey(api.etcdEndpoints)
-	if err != nil {
+	var k *client.KeysAPI
+	if err := utils.WithFixedIntervalRetry(
+		func() error {
+			var err error
+			k, err = utils.GetEtcdKey(api.etcdEndpoints)
+			return err
+		},
+		5,
+		5*time.Second,
+	); err != nil {
 		return err
 	}
-	api.etcd = kapi
-	err = api.announce()
+
+	api.etcd = k
+	err := api.announce()
 	if err != nil {
 		return err
 	}
