@@ -9,7 +9,9 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
+	"github.com/Xide/rssh/cmd/agent/ls"
 	"github.com/Xide/rssh/cmd/agent/register"
+	"github.com/Xide/rssh/cmd/agent/rm"
 	"github.com/Xide/rssh/pkg/agent"
 )
 
@@ -61,5 +63,7 @@ func NewCommand(flags *Flags) *cobra.Command {
 	viper.BindPFlag("api.port", cmd.PersistentFlags().Lookup("api-port"))
 
 	cmd.AddCommand(register.NewCommand(flags))
+	cmd.AddCommand(ls.NewCommand(flags))
+	cmd.AddCommand(rm.NewCommand(flags))
 	return cmd
 }

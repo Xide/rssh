@@ -223,6 +223,13 @@ func (a *Agent) Init() error {
 	return nil
 }
 
+// WalkIdentities calls fn() on each of the parsed keys from the filesystem
+func (a *Agent) WalkIdentities(fn func(*ForwardedHost)) {
+	for _, x := range a.hosts {
+		fn(&x)
+	}
+}
+
 func (a *Agent) isRunning(fwHost *ForwardedHost) bool {
 	for _, running := range a.actives {
 		if fwHost.UID == running.UID {

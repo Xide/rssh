@@ -4,6 +4,7 @@ import (
 	"encoding/pem"
 	"errors"
 	"io/ioutil"
+	"os"
 	"path"
 	"strconv"
 	"strings"
@@ -78,4 +79,22 @@ func filterPublicKeys(path string) ([]string, error) {
 		}
 	}
 	return res, nil
+}
+
+func (a *Agent) RemoveIdentity(uid string) error {
+	for _, x := range a.hosts {
+		if uid == x.UID || uid == x.Domain {
+			path := path.Join(
+				a.RootDirectory,
+				"identities",
+				"id_rsa."+x.Domain,
+			)
+			err := os.RemoveAll(path)
+			if err != nil {
+				return err
+			}
+			return nil
+		}
+	}
+	return errors.New("Identity not found : " + uid)
 }
