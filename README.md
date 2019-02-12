@@ -51,8 +51,6 @@ go build
 cat >> ~/.ssh/config << EOF
 Host *.baguette.localhost
     ProxyCommand ssh -p 2223 127.0.0.1 %h
-    StrictHostKeyChecking no
-    UserKnownHostsFile=/dev/null
 
 EOF
 
