@@ -60,7 +60,7 @@ func (g *GateKeeper) WithEtcdE(etcdEndpoints []string) error {
 	// Clear any potential remaining datas from previous gatekeepers
 	// WILL prevent multiple gatekeepers to run at the same time.
 	_, err := (*k).Delete(context.Background(), "/gatekeeper/slotfs", &client.DeleteOptions{Recursive: true})
-	if err.(client.Error).Code != client.ErrorCodeKeyNotFound {
+	if err != nil && err.(client.Error).Code != client.ErrorCodeKeyNotFound {
 		return err
 	}
 	return nil
@@ -152,8 +152,8 @@ func (g *GateKeeper) initSSHServer() error {
 	}
 	addr := fmt.Sprintf("%s:%d", g.Meta.SSHAddr, g.Meta.SSHPort)
 	server := ssh.Server{
-		Addr:                          addr,
-		Handler:                       ssh.Handler(g.proxyCommandHandler()),
+		Addr:    addr,
+		Handler: ssh.Handler(g.proxyCommandHandler()),
 		ReversePortForwardingCallback: ssh.ReversePortForwardingCallback(g.reversePortForwardHandler(*g.etcd)),
 	}
 	g.srv = &server
