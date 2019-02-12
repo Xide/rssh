@@ -30,6 +30,7 @@ func (g *GateKeeper) setupForward(s ssh.Session, slot *AgentSlot) {
 			Str("destination", backendAddr).
 			Str("error", err.Error()).
 			Msg("Failed to dial backend.")
+		return
 	}
 	log.Debug().
 		Str("domain", slot.Domain).
