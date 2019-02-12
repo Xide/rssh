@@ -148,7 +148,7 @@ func (a *Agent) establishReverseForward(host string, port uint16, slot uint16, f
 		BindAddr string
 		BindPort uint32
 	}{
-		BindAddr: "127.0.0.1",
+		BindAddr: "0.0.0.0",
 		BindPort: uint32(slot),
 	}))
 	if err != nil {
