@@ -97,7 +97,7 @@ the capitalized dot separated path of your variable in `.rssh.yml`.
 
 *Gatekeeper*:
 
-- [ ] HostsKey file
+- [x] ~~HostsKey file~~
 
 *API*:
 
