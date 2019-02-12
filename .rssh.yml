@@ -20,6 +20,8 @@ gatekeeper:
   ### Port range used by gatekeeper to allocate agents
   ### remote forwarding sessions.
   ssh_port_range: "31240-65535"
+  ### Set this value to change the path to
+  # ssh_host_key: /etc/.rssh-gk-host.key
 
 ## ETCD cluster
 ## Used in the API and the gatekeeper

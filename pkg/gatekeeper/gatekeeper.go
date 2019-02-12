@@ -2,15 +2,20 @@ package gatekeeper
 
 import (
 	"context"
+	"crypto/rand"
+	"crypto/rsa"
+	"crypto/x509"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"time"
 
 	"go.etcd.io/etcd/client"
 
 	"github.com/gliderlabs/ssh"
 	"github.com/rs/zerolog/log"
+	gossh "golang.org/x/crypto/ssh"
 
 	"github.com/Xide/rssh/pkg/utils"
 )
@@ -38,6 +43,7 @@ type GateKeeper struct {
 	etcd     *client.KeysAPI
 	backends []Gate
 	clients  []AgentSlot
+	hostKey  gossh.Signer
 }
 
 // WithEtcdE instanciate an etcd client and connect to the cluster.
@@ -143,6 +149,42 @@ func (g *GateKeeper) collectClosedSession(ctx ssh.Context, slot *AgentSlot) {
 	}
 }
 
+// WithHostKey loads the private key at `path` and create a new signer from it.
+// if the file does not exist (or can't be read from), a new host key will be
+// generated and stored at `path`
+func (g *GateKeeper) WithHostKey(path string) error {
+	var key *rsa.PrivateKey
+	b, err := ioutil.ReadFile(path)
+	if err != nil {
+		log.Info().Msg("Generating new host key")
+		key, err = rsa.GenerateKey(rand.Reader, 2048)
+		if err != nil {
+			log.Error().Str("error", err.Error()).Msg("Failed to generate host key")
+			return err
+		}
+		payload := x509.MarshalPKCS1PrivateKey(key)
+		err = ioutil.WriteFile(path, payload, 0600)
+		if err != nil {
+			log.Warn().
+				Str("error", err.Error()).
+				Msg("Failed to persist private key, identity WILL change if the gatekeeper is restarted")
+		}
+	} else {
+		log.Debug().Str("path", path).Msg("Imported host key.")
+		key, err = x509.ParsePKCS1PrivateKey(b)
+		if err != nil {
+			log.Error().Str("error", err.Error()).Msg("Failed to parse host key")
+			return err
+		}
+	}
+	g.hostKey, err = gossh.NewSignerFromKey(key)
+	if err != nil {
+		log.Error().Str("error", err.Error()).Msg("Failed to import host key from private key")
+		return err
+	}
+	return nil
+}
+
 // initSSHServer creates a new SSH server with
 // - routing logic through command
 // - reverse port forwarding logic for agents
@@ -150,10 +192,14 @@ func (g *GateKeeper) initSSHServer() error {
 	if g.srv != nil {
 		return errors.New("SSH server already initialized")
 	}
+	if g.hostKey == nil {
+		return errors.New("Host key missing")
+	}
 	addr := fmt.Sprintf("%s:%d", g.Meta.SSHAddr, g.Meta.SSHPort)
 	server := ssh.Server{
-		Addr:    addr,
-		Handler: ssh.Handler(g.proxyCommandHandler()),
+		Addr:        addr,
+		HostSigners: []ssh.Signer{g.hostKey},
+		Handler:     ssh.Handler(g.proxyCommandHandler()),
 		ReversePortForwardingCallback: ssh.ReversePortForwardingCallback(g.reversePortForwardHandler(*g.etcd)),
 	}
 	g.srv = &server

@@ -20,6 +20,7 @@ type Flags struct {
 	BindAddr      string `mapstructure:"ssh_addr"`
 	BindPort      uint16 `mapstructure:"ssh_port"`
 	SSHPortRange  string `mapstructure:"ssh_port_range"`
+	HostKeyFile   string `mapstructure:"ssh_host_key"`
 	SSHPortLow    uint16
 	SSHPortHigh   uint16
 	EtcdEndpoints []string
@@ -91,6 +92,13 @@ func NewCommand(flags *Flags) *cobra.Command {
 				os.Exit(1)
 			}
 
+			if err := g.WithHostKey(flags.HostKeyFile); err != nil {
+				log.Error().
+					Str("error", err.Error()).
+					Msg("Failed to generate host key")
+				os.Exit(1)
+			}
+
 			return g.Run()
 		},
 	}
@@ -130,6 +138,15 @@ func NewCommand(flags *Flags) *cobra.Command {
 		"Port range where RSSH will bind the agents listener on (format: '$min-$max')",
 	)
 	viper.BindPFlag("gatekeeper.ssh_port_range", cmd.Flags().Lookup("port-range"))
+
+	cmd.Flags().StringVarP(
+		&flags.HostKeyFile,
+		"host-key",
+		"i",
+		".rssh-gk-host.key",
+		"SSH server host file. If the destination file does not exists, a new one will be generated there.",
+	)
+	viper.BindPFlag("gatekeeper.ssh_host_key", cmd.Flags().Lookup("host-key"))
 
 	return cmd
 }

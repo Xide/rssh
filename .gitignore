@@ -81,5 +81,5 @@ tags
 
 # End of https://www.gitignore.io/api/go,vim,git,linux,visualstudiocode
 
-agent.service
 rssh
+.rssh-gk-host.key
