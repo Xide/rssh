@@ -1,4 +1,6 @@
 version: '3'
+volumes:
+  rssh_gatekeeper_host_key:
 
 services:
   etcd:
@@ -37,9 +39,11 @@ services:
       RSSH_GATEKEEPER_PORT: '2223'
       RSSH_GATEKEEPER_PORT_RANGE: '31240-65535'
       RSSH_GATEKEEPER_ETCD_ENDPOINTS: 'http://127.0.0.1:2379'
+      RSSH_GATEKEEPER_SSH_HOST_KEY: '/hostkey/.rssh-gk-host.key'
     command: gatekeeper
     volumes:
       - .rssh.yml:/.rssh.yml
+      - rssh_gatekeeper_host_key:/hostkey/
     depends_on:
       - etcd
     network_mode: host
