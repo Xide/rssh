@@ -1,0 +1,12 @@
+version: 2
+jobs:
+  build_images:
+    machine: true
+    steps:
+      - checkout
+      - run: docker login -u $DOCKER_USER -p $DOCKER_PASS
+        name: Login to Docker hub
+      - name: Build Docker image
+        run: docker build -t sigbilly/rssh:$CIRCLE_BRANCH
+      - name: Push Docker image
+        run: docker push sigbilly/rssh:$CIRCLE_BRANCH
