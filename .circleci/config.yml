@@ -15,7 +15,7 @@ jobs:
           command: docker login -u $DOCKER_USER -p $DOCKER_PASS
       - run:
           name: Build Docker image
-          command: docker build -t sigbilly/rssh:$CIRCLE_BRANCH
+          command: docker build -t sigbilly/rssh:$CIRCLE_BRANCH .
       - run:
           name: Push Docker image
           command: docker push sigbilly/rssh:$CIRCLE_BRANCH
