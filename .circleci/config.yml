@@ -1,4 +1,10 @@
 version: 2
+workflows:
+  version: 2
+  publish:
+    jobs:
+      - build_images
+
 jobs:
   build_images:
     machine: true
