@@ -19,3 +19,26 @@ jobs:
       - run:
           name: Push Docker image
           command: docker push sigbilly/rssh:$CIRCLE_BRANCH
+
+  standalone_executables:
+    docker:
+      - image: golang:1.12-stretch
+    steps:
+      - checkout
+      - run: go get -u github.com/tcnksm/ghr
+      - run: go get -v
+      - run: |
+          GOARCHS=(386 amd64 arm arm64)
+          GOOSES=(darwin linux windows)
+          
+          mkdir release
+          
+          for GOARCH in ${GOARCHS[@]}
+          do
+            for GOOS in ${GOOSES[@]}
+            do
+              echo "Building for $GOOS-$GOARCH"
+              go build -o release/rssh-${GOOS}-${GOARCH}
+            done
+          done
+      - run: ghr latest release
