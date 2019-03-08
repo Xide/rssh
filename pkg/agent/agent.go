@@ -100,7 +100,8 @@ func (a *Agent) handleNewConnections(ch <-chan ssh.NewChannel, fwHost *Forwarded
 			log.Debug().
 				Str("domain", fwHost.Domain).
 				Msg("New connection request.")
-			ch, _, err := x.Accept()
+			ch, reqs, err := x.Accept()
+			ssh.DiscardRequests(reqs)
 			if err != nil {
 				log.Warn().
 					Str("error", err.Error()).
