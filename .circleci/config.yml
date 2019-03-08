@@ -4,6 +4,7 @@ workflows:
   publish:
     jobs:
       - build_images
+      - standalone_executables
 
 jobs:
   build_images:
@@ -26,7 +27,7 @@ jobs:
     steps:
       - checkout
       - run: go get -u github.com/tcnksm/ghr
-      - run: go get -v
+      - run: go mod download
       - run: |
           GOARCHS=(386 amd64 arm arm64)
           GOOSES=(darwin linux windows)
@@ -38,7 +39,7 @@ jobs:
             for GOOS in ${GOOSES[@]}
             do
               echo "Building for $GOOS-$GOARCH"
-              go build -o release/rssh-${GOOS}-${GOARCH}
+              CGO_ENABLED=0 go build -o release/rssh-${GOOS}-${GOARCH}
             done
           done
       - run: ghr latest release
